@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
+
+    <!--for reboot global action -->
+    <java-symbol type="string" name="reboot_confirm" />
+    <java-symbol type="string" name="reboot_title" />
+    <java-symbol type="string" name="global_action_reboot" />
+    <string name="reboot_title">Reboot System</string>
+    <string name="reboot_confirm">Do you want to reboot the system?
+         This will disable all third party applications you have installed.</string>
+    <string name="global_action_reboot">Reboot</string>
+    <public type="drawable" name="ic_lock_reboot" id="0x0108009e" />
+
+</resources>
