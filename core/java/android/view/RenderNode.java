@@ -184,6 +184,13 @@ public class RenderNode {
         mOwningView = null;
     }
 
+	//ligengchao start
+		public void setResourceID(String name) {
+			nSetResourceID(name, mNativeRenderNode);
+		}
+	
+	//ligengchao end 
+
     /**
      * Creates a new RenderNode that can be used to record batches of
      * drawing operations, and store / apply render properties when drawn.
@@ -829,6 +836,7 @@ public class RenderNode {
     ///////////////////////////////////////////////////////////////////////////
 
     private static native long nCreate(String name);
+	private static native void nSetResourceID(String name, long renderNode);//ligengchao
     private static native void nDestroyRenderNode(long renderNode);
     private static native void nSetDisplayListData(long renderNode, long newData);
 

@@ -137,6 +137,20 @@ public:
         }
     }
 
+//ligengchao start
+
+	const char* getResourceID() const {
+			return mResourceID.string();
+		}
+
+	void setResourceID(const char* name) {
+			if (name) {
+				mResourceID.setTo(name);
+			}
+		}
+
+//ligengchao end
+
     bool isPropertyFieldDirty(DirtyPropertyMask field) const {
         return mDirtyPropertyFields & field;
     }
@@ -251,6 +265,7 @@ private:
     void decParentRefCount();
 
     String8 mName;
+	String8 mResourceID;//ligengchao
 
     uint32_t mDirtyPropertyFields;
     RenderProperties mProperties;

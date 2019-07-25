@@ -3566,8 +3566,15 @@ public class View implements Drawable.Callback, KeyEvent.Callback,
      */
     private static SparseArray<String> mAttributeMap;
 
+	//ligengchao start
 
 	public String mResourceID = null;//ligengchao
+
+	public RenderNode getRenderNode() {
+		return mRenderNode;
+	}
+
+	//ligengchao end 
 
 
     /**

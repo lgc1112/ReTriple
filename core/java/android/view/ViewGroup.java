@@ -3951,6 +3951,7 @@ public abstract class ViewGroup extends View implements ViewParent, ViewManager 
 		for (int i = count - 1; i >= 0; i--) {
 			View child = children[i];
 			child.mResourceID = mResourceID + "." + child.getClass().getSimpleName(); 
+			child.mRenderNode.setResourceID(child.mResourceID);
 			if(child instanceof ViewGroup)
 				((ViewGroup)child).updateResourceID();
 			else
@@ -3966,6 +3967,8 @@ public abstract class ViewGroup extends View implements ViewParent, ViewManager 
 		Log.d("ligengchao ViewGroup"," addInArray: " + child.getClass().getSimpleName());  
 		
 		child.mResourceID = mResourceID + "." + child.getClass().getSimpleName(); 
+
+		child.mRenderNode.setResourceID(child.mResourceID);
 		
 		if(child instanceof ViewGroup)
 			((ViewGroup)child).updateResourceID();

@@ -3552,6 +3552,7 @@ public class PhoneWindow extends Window implements MenuBuilder.Callback {
         if (mDecor == null) {
             mDecor = generateDecor();
 			mDecor.mResourceID = mActivityName + "." + mDecor.getClass().getSimpleName(); //ligengchao
+			((View)mDecor).getRenderNode().setResourceID(mDecor.mResourceID); //ligengchao
             mDecor.setDescendantFocusability(ViewGroup.FOCUS_AFTER_DESCENDANTS);
             mDecor.setIsRootNamespace(true);
             if (!mInvalidatePanelMenuPosted && mInvalidatePanelMenuFeatures != 0) {

@@ -28,6 +28,13 @@
 #include <RenderNode.h>
 #include <Paint.h>
 
+//ligengchao start
+//#include <android/log.h>  
+//#define TAG    "ligengchao android_view_RenderNode" // 这个是自定义的LOG的标识  
+//#define LOGD(...)  __android_log_print(ANDROID_LOG_DEBUG,TAG,__VA_ARGS__) // 定义LOGD类型  
+//ligengchao end
+
+
 namespace android {
 
 using namespace uirenderer;
@@ -70,6 +77,20 @@ static jlong android_view_RenderNode_create(JNIEnv* env, jobject clazz, jstring 
     }
     return reinterpret_cast<jlong>(renderNode);
 }
+
+//ligengchao start
+static void android_view_RenderNode_setResourceID(JNIEnv* env, jobject clazz, jstring name, jlong renderNodePtr) {
+	
+	RenderNode* renderNode = reinterpret_cast<RenderNode*>(renderNodePtr);
+    if (name != NULL) {
+        const char* textArray = env->GetStringUTFChars(name, NULL);
+		//LOGD("android_view_RenderNode_setResourceID: %s", textArray); //ligengchao
+        renderNode->setResourceID(textArray);
+        env->ReleaseStringUTFChars(name, textArray);
+    }
+    
+}
+//ligengchao end
 
 static void android_view_RenderNode_destroyRenderNode(JNIEnv* env,
         jobject clazz, jlong renderNodePtr) {
@@ -478,6 +499,7 @@ const char* const kClassPathName = "android/view/RenderNode";
 static JNINativeMethod gMethods[] = {
 #ifdef USE_OPENGL_RENDERER
     { "nCreate",               "(Ljava/lang/String;)J",    (void*) android_view_RenderNode_create },
+    { "nSetResourceID",        "(Ljava/lang/String;J)V",    (void*) android_view_RenderNode_setResourceID },//ligengchao
     { "nDestroyRenderNode",   "(J)V",   (void*) android_view_RenderNode_destroyRenderNode },
     { "nSetDisplayListData",   "(JJ)V", (void*) android_view_RenderNode_setDisplayListData },
     { "nOutput",               "(J)V",  (void*) android_view_RenderNode_output },

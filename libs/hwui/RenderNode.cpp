@@ -95,7 +95,8 @@ RenderNode::~RenderNode() {
 }
 
 void RenderNode::setStagingDisplayList(DisplayListData* data) {
-	LOGD("update: %s", getName()); //ligengchao
+	//LOGD("update: Name: %s", getName()); //ligengchao 
+	LOGD("update: ResourceID: %s", getResourceID()); //ligengchao
     mNeedsDisplayListDataSync = true;
     delete mStagingDisplayListData;
     mStagingDisplayListData = data;
@@ -587,7 +588,8 @@ private:
 };
 
 void RenderNode::defer(DeferStateStruct& deferStruct, const int level) {
-	LOGD("derfer: %s", getName()); //ligengchao
+	LOGD("defer: Name %s", getName()); //ligengchao
+	LOGD("defer: ResourceID %s", getResourceID()); //ligengchao
     DeferOperationHandler handler(deferStruct, level);
     issueOperations<DeferOperationHandler>(deferStruct.mRenderer, handler);
 }
