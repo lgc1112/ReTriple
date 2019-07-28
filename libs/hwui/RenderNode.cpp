@@ -37,6 +37,7 @@
 #include "renderthread/CanvasContext.h"
 
 //ligengchao start
+#include "ViewResourceCache.h"
 #include <android/log.h>  
 #define TAG    "ligengchao RenderNode" // 这个是自定义的LOG的标识  
 #define LOGD(...)  __android_log_print(ANDROID_LOG_DEBUG,TAG,__VA_ARGS__) // 定义LOGD类型  
@@ -95,8 +96,17 @@ RenderNode::~RenderNode() {
 }
 
 void RenderNode::setStagingDisplayList(DisplayListData* data) {
-	//LOGD("update: Name: %s", getName()); //ligengchao 
-	LOGD("update: ResourceID: %s", getResourceID()); //ligengchao
+	//ligengchao start
+	std::string s = getResourceID();//ligengchao
+	if(s.length() == 0){
+		s = getName();
+		LOGD("update: ResourceID(Name): %s", s.c_str());
+	}else{
+		LOGD("update: ResourceID: %s", s.c_str()); //ligengchao
+	}
+	ViewResourceCache::getInstance().generate(s);
+	//ligengchao end
+
     mNeedsDisplayListDataSync = true;
     delete mStagingDisplayListData;
     mStagingDisplayListData = data;
@@ -587,9 +597,34 @@ private:
     const int mLevel;
 };
 
+int ii = 0;//ligengchao
 void RenderNode::defer(DeferStateStruct& deferStruct, const int level) {
-	LOGD("defer: Name %s", getName()); //ligengchao
-	LOGD("defer: ResourceID %s", getResourceID()); //ligengchao
+	//ligengchao start
+	std::string s = getResourceID();//ligengchao
+	if(s.length() == 0){
+		s = getName();
+		LOGD("defer: ResourceID(Name): %s", s.c_str());
+	}else{
+		LOGD("defer: ResourceID: %s", s.c_str()); //ligengchao
+	}
+	ViewResourceCache::getInstance().draw(s);
+	ii++;
+	if(ii >= 300){
+		LOGD("defer: s.max_size(): %d", s.max_size()); //ligengchao	
+		ii = 0;
+	  	int len =  ViewResourceCache::getInstance().print().length();
+		const char* sPrint = ViewResourceCache::getInstance().print().c_str();
+		while(len > 500){
+			len -= 500;
+			LOGD("defer: ResourceCache: %-500.500s", sPrint); //ligengchao
+			sPrint += 500;
+			
+		}
+		LOGD("defer: ResourceCache: %s", sPrint); //ligengchao
+		//LOGD("defer: ResourceCache: %s", ViewResourceCache::getInstance().print().c_str()); //ligengchao
+	}
+	//ligengchao end
+
     DeferOperationHandler handler(deferStruct, level);
     issueOperations<DeferOperationHandler>(deferStruct.mRenderer, handler);
 }
