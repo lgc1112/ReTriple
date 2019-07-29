@@ -40,6 +40,13 @@
 #include "DisplayList.h"
 #include "RenderProperties.h"
 #include "TreeInfo.h"
+//ligengchao start
+#include "ViewResourceCache.h"
+#include <android/log.h>  
+#define TAG    "ligengchao RenderNode" // 这个是自定义的LOG的标识  
+#define LOGD(...)  __android_log_print(ANDROID_LOG_DEBUG,TAG,__VA_ARGS__) // 定义LOGD类型  
+//ligengchao end
+
 
 class SkBitmap;
 class SkPaint;
@@ -148,6 +155,13 @@ public:
 				mResourceID.setTo(name);
 			}
 		}
+	void updateResource()  {
+		//LOGD("updateResource: %s", name);
+		hasUpdate = true;
+		//updateResource = name;
+		//updateResources.push_back(name);
+		//ViewResourceCache::getInstance().generate(name);
+	}
 
 //ligengchao end
 
@@ -265,7 +279,12 @@ private:
     void decParentRefCount();
 
     String8 mName;
-	String8 mResourceID;//ligengchao
+	//ligengchao start
+	String8 mResourceID;
+	//string updateResource;
+	//vector<string> updateResources;
+	bool hasUpdate = false;
+	//ligengchao end 
 
     uint32_t mDirtyPropertyFields;
     RenderProperties mProperties;

@@ -36,12 +36,6 @@
 #include "utils/MathUtils.h"
 #include "renderthread/CanvasContext.h"
 
-//ligengchao start
-#include "ViewResourceCache.h"
-#include <android/log.h>  
-#define TAG    "ligengchao RenderNode" // 这个是自定义的LOG的标识  
-#define LOGD(...)  __android_log_print(ANDROID_LOG_DEBUG,TAG,__VA_ARGS__) // 定义LOGD类型  
-//ligengchao end
 
 
 namespace android {
@@ -94,15 +88,21 @@ RenderNode::~RenderNode() {
     delete mStagingDisplayListData;
     LayerRenderer::destroyLayerDeferred(mLayer);
 }
+//ligengchao start
+//void RenderNode::updateResource(const char* name) {
+	//ViewResourceCache::getInstance().generate(name);
+//}
+//ligengchao end
 
 void RenderNode::setStagingDisplayList(DisplayListData* data) {
 	//ligengchao start
-	std::string s = getResourceID();//ligengchao
+	std::string s = getResourceID();
+	
 	if(s.length() == 0){
 		s = getName();
 		LOGD("update: ResourceID(Name): %s", s.c_str());
 	}else{
-		LOGD("update: ResourceID: %s", s.c_str()); //ligengchao
+		LOGD("update: ResourceID: %s", s.c_str()); 
 	}
 	ViewResourceCache::getInstance().generate(s);
 	//ligengchao end
@@ -600,28 +600,41 @@ private:
 int ii = 0;//ligengchao
 void RenderNode::defer(DeferStateStruct& deferStruct, const int level) {
 	//ligengchao start
-	std::string s = getResourceID();//ligengchao
+	std::string s = getResourceID();
 	if(s.length() == 0){
 		s = getName();
 		LOGD("defer: ResourceID(Name): %s", s.c_str());
 	}else{
-		LOGD("defer: ResourceID: %s", s.c_str()); //ligengchao
+		LOGD("defer: ResourceID: %s", s.c_str()); 
 	}
+	if(hasUpdate){
+		hasUpdate = false;
+		LOGD("update: hasUpdateResource: %s", s.c_str());
+		ViewResourceCache::getInstance().generate(s); 
+		//LOGD("update: exitUpdateResource: %d", updateResources.size());
+		//for (vector<string>::iterator iter = updateResources.begin(); iter != updateResources.end(); ++iter){
+		//	ViewResourceCache::getInstance().generate(*iter);
+		//	LOGD("update: updateResources: %s", (*iter).c_str()); 
+		//}
+		//updateResources.erase(updateResources.begin(), updateResources.end());
+	}
+	
+
 	ViewResourceCache::getInstance().draw(s);
 	ii++;
-	if(ii >= 300){
-		LOGD("defer: s.max_size(): %d", s.max_size()); //ligengchao	
+	if(ii >= 500){ 
+		LOGD("defer: s.max_size(): %d", s.max_size()); 
 		ii = 0;
 	  	int len =  ViewResourceCache::getInstance().print().length();
 		const char* sPrint = ViewResourceCache::getInstance().print().c_str();
-		while(len > 500){
-			len -= 500;
-			LOGD("defer: ResourceCache: %-500.500s", sPrint); //ligengchao
-			sPrint += 500;
+		while(len > 900){ 
+			len -= 900; 
+			LOGD("defer: ResourceCache: %-900.900s", sPrint); 
+			sPrint += 900; 
 			
 		}
-		LOGD("defer: ResourceCache: %s", sPrint); //ligengchao
-		//LOGD("defer: ResourceCache: %s", ViewResourceCache::getInstance().print().c_str()); //ligengchao
+		LOGD("defer: ResourceCache: %s", sPrint);
+		//LOGD("defer: ResourceCache: %s", ViewResourceCache::getInstance().print().c_str()); 
 	}
 	//ligengchao end
 

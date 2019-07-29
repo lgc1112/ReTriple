@@ -3568,7 +3568,8 @@ public class View implements Drawable.Callback, KeyEvent.Callback,
 
 	//ligengchao start
 
-	public String mResourceID = null;//ligengchao
+	public String mResourceID = null;
+	public String mResourceIDWithoutHashCode = null;
 
 	public RenderNode getRenderNode() {
 		return mRenderNode;
@@ -14024,7 +14025,8 @@ public class View implements Drawable.Callback, KeyEvent.Callback,
                 mPrivateFlags |= PFLAG_DRAWN | PFLAG_DRAWING_CACHE_VALID;
                 mPrivateFlags &= ~PFLAG_DIRTY_MASK;
                 dispatchGetDisplayList();
-
+				mRenderNode.updateResource();
+				Log.d("ligengchao View"," dispatchGetDisplayList: " + mResourceID);  //ligengchao
                 return; // no work needed
             }
 

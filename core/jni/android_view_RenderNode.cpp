@@ -90,6 +90,17 @@ static void android_view_RenderNode_setResourceID(JNIEnv* env, jobject clazz, js
     }
     
 }
+
+static void android_view_RenderNode_updateResource(JNIEnv* env, jobject clazz, jlong renderNodePtr) {
+	
+	RenderNode* renderNode = reinterpret_cast<RenderNode*>(renderNodePtr);
+	
+		//LOGD("android_view_RenderNode_setResourceID: %s", textArray); //ligengchao
+	renderNode->updateResource();
+
+	
+}
+
 //ligengchao end
 
 static void android_view_RenderNode_destroyRenderNode(JNIEnv* env,
@@ -500,6 +511,7 @@ static JNINativeMethod gMethods[] = {
 #ifdef USE_OPENGL_RENDERER
     { "nCreate",               "(Ljava/lang/String;)J",    (void*) android_view_RenderNode_create },
     { "nSetResourceID",        "(Ljava/lang/String;J)V",    (void*) android_view_RenderNode_setResourceID },//ligengchao
+    { "nUpdateResource",        "(J)V",    (void*) android_view_RenderNode_updateResource },//ligengchao
     { "nDestroyRenderNode",   "(J)V",   (void*) android_view_RenderNode_destroyRenderNode },
     { "nSetDisplayListData",   "(JJ)V", (void*) android_view_RenderNode_setDisplayListData },
     { "nOutput",               "(J)V",  (void*) android_view_RenderNode_output },

@@ -3945,17 +3945,17 @@ public abstract class ViewGroup extends View implements ViewParent, ViewManager 
 	//ligengchao start
 
 	public void updateResourceID(){
-		Log.d("ligengchao ViewGroup"," updateResourceID: " + mResourceID);  
+		//Log.d("ligengchao ViewGroup"," updateResourceID: " + mResourceID);  
 		final int count = mChildrenCount;
 		final View[] children = mChildren;
 		for (int i = count - 1; i >= 0; i--) {
 			View child = children[i];
-			child.mResourceID = mResourceID + "." + child.getClass().getSimpleName(); 
+			child.mResourceID = mResourceIDWithoutHashCode + "." + child.getClass().getSimpleName() + "." + child.hashCode(); 
+			child.mResourceIDWithoutHashCode = mResourceIDWithoutHashCode + "." + child.getClass().getSimpleName();
 			child.mRenderNode.setResourceID(child.mResourceID);
 			if(child instanceof ViewGroup)
 				((ViewGroup)child).updateResourceID();
-			else
-				child.mResourceID = child.mResourceID + "." + child.hashCode();
+
 			
 		}
 
@@ -3964,16 +3964,15 @@ public abstract class ViewGroup extends View implements ViewParent, ViewManager 
 
     private void addInArray(View child, int index) {
     	//ligengchao start
-		Log.d("ligengchao ViewGroup"," addInArray: " + child.getClass().getSimpleName());  
-		
-		child.mResourceID = mResourceID + "." + child.getClass().getSimpleName(); 
+		child.mResourceID = mResourceIDWithoutHashCode + "." + child.getClass().getSimpleName() + "." + child.hashCode(); 
+		child.mResourceIDWithoutHashCode = mResourceIDWithoutHashCode + "." + child.getClass().getSimpleName();
+		Log.d("ligengchao ViewGroup"," addInArray: " + child.mResourceID); 
 
 		child.mRenderNode.setResourceID(child.mResourceID);
 		
 		if(child instanceof ViewGroup)
 			((ViewGroup)child).updateResourceID();
-		else
-			child.mResourceID = child.mResourceID + "." + child.hashCode();
+		
 		//ligengchao end
 		
         View[] children = mChildren;

@@ -185,9 +185,13 @@ public class RenderNode {
     }
 
 	//ligengchao start
-		public void setResourceID(String name) {
-			nSetResourceID(name, mNativeRenderNode);
-		}
+	public void setResourceID(String name) {
+		nSetResourceID(name, mNativeRenderNode);
+	}
+
+	public void updateResource() {
+		nUpdateResource(mNativeRenderNode);
+	}
 	
 	//ligengchao end 
 
@@ -837,6 +841,7 @@ public class RenderNode {
 
     private static native long nCreate(String name);
 	private static native void nSetResourceID(String name, long renderNode);//ligengchao
+	private static native void nUpdateResource(long renderNode);//ligengchao	
     private static native void nDestroyRenderNode(long renderNode);
     private static native void nSetDisplayListData(long renderNode, long newData);
 
