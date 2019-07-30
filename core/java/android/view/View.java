@@ -3500,7 +3500,10 @@ public class View implements Drawable.Callback, KeyEvent.Callback,
     public boolean mCachingFailed;
     private Bitmap mDrawingCache;
     private Bitmap mUnscaledDrawingCache;
-
+	private Bitmap mResourceDrawingCache;//ligengchao
+	private boolean needUpdateRenderNode = true;//ligengchao
+	private int viewType = 0;//ligengchao
+	
     /**
      * RenderNode holding View properties, potentially holding a DisplayList of View content.
      * <p>
@@ -3567,7 +3570,7 @@ public class View implements Drawable.Callback, KeyEvent.Callback,
     private static SparseArray<String> mAttributeMap;
 
 	//ligengchao start
-
+	private int mRedrawCount = 0; 
 	public String mResourceID = null;
 	public String mResourceIDWithoutHashCode = null;
 
@@ -14008,12 +14011,201 @@ public class View implements Drawable.Callback, KeyEvent.Callback,
         return !(mAttachInfo == null || mAttachInfo.mHardwareRenderer == null);
     }
 
+//ligengchao start
+
+	public void useResourceCache() {
+		if(viewType == 1)
+			return;
+		if(!needUpdateRenderNode && mResourceDrawingCache != null){
+			Log.d("ligengchao View"," notNeedUpdateRenderNode: " + mResourceID); 
+			return;			
+		}
+		final RenderNode renderNode = mRenderNode;
+		int width = mRight - mLeft;
+		int height = mBottom - mTop;
+		final HardwareCanvas canvas = renderNode.start(width, height);
+		canvas.setHighContrastText(mAttachInfo.mHighContrastText);
+		
+		/*if (mResourceDrawingCache != null) {
+			Log.d("ligengchao View"," reuseBitmap: " + mResourceID); 
+            canvas.drawBitmap(mResourceDrawingCache, 0, 0, mLayerPaint);
+			renderNode.end(canvas);
+            setDisplayListProperties(renderNode);
+			return;
+        }*/
+        
+		try {
+			Bitmap cache = getResourceDrawingCache();
+	        if (mResourceDrawingCache != null) {
+				needUpdateRenderNode = false;
+				Log.d("ligengchao View"," drawBitmap: " + mResourceID); 
+	            canvas.drawBitmap(mResourceDrawingCache, 0, 0, mLayerPaint);
+				
+	        }
+                
+        } finally {
+            renderNode.end(canvas);
+    		setDisplayListProperties(renderNode);
+        }
+		
+	}
+	
+	public Bitmap getResourceDrawingCache() {
+        buildResourceDrawingCache();
+		Log.d("ligengchao View"," DRAWING_CACHE_ENABLED: " + mResourceID); 
+        
+        return mResourceDrawingCache;
+    }
+	
+	public void buildResourceDrawingCache() {
+		if (mResourceDrawingCache == null ) {
+			mCachingFailed = false;
+			Log.d("ligengchao View"," buildResourceDrawingCache: " + mResourceID); 
+			int width = mRight - mLeft;
+			int height = mBottom - mTop;
+
+			final AttachInfo attachInfo = mAttachInfo;
+			final boolean scalingRequired = attachInfo != null && attachInfo.mScalingRequired;
+
+			if (scalingRequired) {
+				width = (int) ((width * attachInfo.mApplicationScale) + 0.5f);
+				height = (int) ((height * attachInfo.mApplicationScale) + 0.5f);
+			}
+
+			final int drawingCacheBackgroundColor = mDrawingCacheBackgroundColor;
+			final boolean opaque = drawingCacheBackgroundColor != 0 || isOpaque();
+			final boolean use32BitCache = attachInfo != null && attachInfo.mUse32BitDrawingCache;
+
+			final long projectedBitmapSize = width * height * (opaque && !use32BitCache ? 2 : 4);
+			final long drawingCacheSize =
+					ViewConfiguration.get(mContext).getScaledMaximumDrawingCacheSize();
+			if (width <= 0 || height <= 0 || projectedBitmapSize > drawingCacheSize) {
+				if (width > 0 && height > 0) {
+					Log.w(VIEW_LOG_TAG, "View too large to fit into drawing cache, needs "
+							+ projectedBitmapSize + " bytes, only "
+							+ drawingCacheSize + " available");
+					Log.d("ligengchao View"," DRAWING_CACHE_ENABLED: " + "View too large to fit into drawing cache, needs "
+							+ projectedBitmapSize + " bytes, only "
+							+ drawingCacheSize + " available");
+				}
+				destroyDrawingCache();
+				mCachingFailed = true;
+				return;
+			}
+
+			boolean clear = true;
+			Bitmap bitmap = mResourceDrawingCache;
+
+			if (bitmap == null || bitmap.getWidth() != width || bitmap.getHeight() != height) {
+				Bitmap.Config quality;
+				if (!opaque) {
+					// Never pick ARGB_4444 because it looks awful
+					// Keep the DRAWING_CACHE_QUALITY_LOW flag just in case
+					switch (mViewFlags & DRAWING_CACHE_QUALITY_MASK) {
+						case DRAWING_CACHE_QUALITY_AUTO:
+						case DRAWING_CACHE_QUALITY_LOW:
+						case DRAWING_CACHE_QUALITY_HIGH:
+						default:
+							quality = Bitmap.Config.ARGB_8888;
+							break;
+					}
+				} else {
+					// Optimization for translucent windows
+					// If the window is translucent, use a 32 bits bitmap to benefit from memcpy()
+					quality = use32BitCache ? Bitmap.Config.ARGB_8888 : Bitmap.Config.RGB_565;
+				}
+
+				// Try to cleanup memory
+				if (bitmap != null) bitmap.recycle();
+
+				try {
+					bitmap = Bitmap.createBitmap(mResources.getDisplayMetrics(),
+							width, height, quality);
+					Log.d("ligengchao View"," createBitmap: " + mResourceID); 
+					bitmap.setDensity(getResources().getDisplayMetrics().densityDpi);
+					mResourceDrawingCache = bitmap;
+					if (opaque && use32BitCache) bitmap.setHasAlpha(false);
+				} catch (OutOfMemoryError e) {
+					// If there is not enough memory to create the bitmap cache, just
+					// ignore the issue as bitmap caches are not required to draw the
+					// view hierarchy
+					Log.d("ligengchao View"," OutOfMemoryError: " + mResourceID); 
+					mResourceDrawingCache = null;
+					mCachingFailed = true;
+					return;
+				}
+
+				clear = drawingCacheBackgroundColor != 0;
+			}
+
+			Canvas canvas;
+			if (attachInfo != null) {
+				canvas = attachInfo.mCanvas;
+				if (canvas == null) {
+					canvas = new Canvas();
+				}
+				canvas.setBitmap(bitmap);
+				// Temporarily clobber the cached Canvas in case one of our children
+				// is also using a drawing cache. Without this, the children would
+				// steal the canvas by attaching their own bitmap to it and bad, bad
+				// thing would happen (invisible views, corrupted drawings, etc.)
+				attachInfo.mCanvas = null;
+			} else {
+				// This case should hopefully never or seldom happen
+				canvas = new Canvas(bitmap);
+			}
+
+			if (clear) {
+				bitmap.eraseColor(drawingCacheBackgroundColor);
+			}
+
+			computeScroll();
+			final int restoreCount = canvas.save();
+
+			if (scalingRequired) {
+				final float scale = attachInfo.mApplicationScale;
+				canvas.scale(scale, scale);
+			}
+
+			canvas.translate(-mScrollX, -mScrollY);
+
+			mPrivateFlags |= PFLAG_DRAWN;
+			if (mAttachInfo == null || !mAttachInfo.mHardwareAccelerated ||
+					mLayerType != LAYER_TYPE_NONE) {
+				mPrivateFlags |= PFLAG_DRAWING_CACHE_VALID;
+			}
+			Log.d("ligengchao View"," drawSoftwareBitmap: " + mResourceID); 
+
+			// Fast path for layouts with no backgrounds
+			if ((mPrivateFlags & PFLAG_SKIP_DRAW) == PFLAG_SKIP_DRAW) {
+				mPrivateFlags &= ~PFLAG_DIRTY_MASK;
+				dispatchDraw(canvas);
+				if (mOverlay != null && !mOverlay.isEmpty()) {
+					mOverlay.getOverlayView().draw(canvas);
+				}
+			} else {
+				draw(canvas);
+			}
+			drawAccessibilityFocus(canvas);
+
+			canvas.restoreToCount(restoreCount);
+			canvas.setBitmap(null);
+
+			if (attachInfo != null) {
+				// Restore the cached Canvas for our siblings
+				attachInfo.mCanvas = canvas;
+			}
+		}
+	}
+
+
+//ligengchao end 
     private void updateDisplayListIfDirty() {
         final RenderNode renderNode = mRenderNode;
         if (!canHaveDisplayList()) {
             // can't populate RenderNode, don't try
             return;
-        }
+        }		
 
         if ((mPrivateFlags & PFLAG_DRAWING_CACHE_VALID) == 0
                 || !renderNode.isValid()
@@ -14026,6 +14218,9 @@ public class View implements Drawable.Callback, KeyEvent.Callback,
                 mPrivateFlags &= ~PFLAG_DIRTY_MASK;
                 dispatchGetDisplayList();
 				mRenderNode.updateResource();
+				mRedrawCount = 0;//ligengchao
+				mResourceDrawingCache = null;//ligengchao
+				needUpdateRenderNode = true;//ligengchao
 				Log.d("ligengchao View"," dispatchGetDisplayList: " + mResourceID);  //ligengchao
                 return; // no work needed
             }
@@ -14045,12 +14240,14 @@ public class View implements Drawable.Callback, KeyEvent.Callback,
                 final HardwareLayer layer = getHardwareLayer();
                 if (layer != null && layer.isValid()) {
                     canvas.drawHardwareLayer(layer, 0, 0, mLayerPaint);
+					viewType = 1;
                 } else if (layerType == LAYER_TYPE_SOFTWARE) {
                     buildDrawingCache(true);
                     Bitmap cache = getDrawingCache(true);
                     if (cache != null) {
                         canvas.drawBitmap(cache, 0, 0, mLayerPaint);
                     }
+					viewType = 2;
                 } else {
                     computeScroll();
 
@@ -14068,14 +14265,25 @@ public class View implements Drawable.Callback, KeyEvent.Callback,
                         draw(canvas);
                     }
                     drawAccessibilityFocus(canvas);
+					viewType = 3;
                 }
             } finally {
                 renderNode.end(canvas);
+				mRedrawCount = 0;//ligengchao
+				mResourceDrawingCache = null;//ligengchao
+				needUpdateRenderNode = true;//ligengchao
                 setDisplayListProperties(renderNode);
             }
         } else {
             mPrivateFlags |= PFLAG_DRAWN | PFLAG_DRAWING_CACHE_VALID;
             mPrivateFlags &= ~PFLAG_DIRTY_MASK;
+			//ligengchao start
+			if(mRedrawCount > 10){
+				Log.d("ligengchao View"," useResourceCache: " + mResourceID + "  mRedrawCount：" + mRedrawCount + "  viewType: " + viewType); 
+				useResourceCache(); 
+				return;
+			}
+			//ligengchao end 
         }
     }
 
@@ -14089,6 +14297,7 @@ public class View implements Drawable.Callback, KeyEvent.Callback,
      */
     public RenderNode getDisplayList() {
     	Log.d("ligengchao View"," getDisplayListView: " + mResourceID);  //ligengchao
+    	mRedrawCount++;//ligengchao
         updateDisplayListIfDirty();
         return mRenderNode;
     }
