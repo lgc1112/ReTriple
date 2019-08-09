@@ -163,6 +163,8 @@ public:
 		//ViewResourceCache::getInstance().generate(name);
 	}
 
+	void compareDisplayList(DisplayListData* newData, DisplayListData* oldData); 
+
 //ligengchao end
 
     bool isPropertyFieldDirty(DirtyPropertyMask field) const {

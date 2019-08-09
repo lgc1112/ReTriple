@@ -20,10 +20,11 @@ private:
 
 
 public:
-	ResourceData& getResourceData(string id);
-	void setResourceData(string id, ResourceData* data);
+//	ResourceData& getResourceData(string id);
+//	void setResourceData(string id, ResourceData* data);
 	void generate(string id);
 	void draw(string id);
+	int getRedrawCount(string id);  
 	string print(void);
 
 

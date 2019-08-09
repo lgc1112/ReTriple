@@ -14278,11 +14278,11 @@ public class View implements Drawable.Callback, KeyEvent.Callback,
             mPrivateFlags |= PFLAG_DRAWN | PFLAG_DRAWING_CACHE_VALID;
             mPrivateFlags &= ~PFLAG_DIRTY_MASK;
 			//ligengchao start
-			if(mRedrawCount > 10){
-				Log.d("ligengchao View"," useResourceCache: " + mResourceID + "  mRedrawCount：" + mRedrawCount + "  viewType: " + viewType); 
-				useResourceCache(); 
-				return;
-			}
+//			if(mRedrawCount > 10){
+//				Log.d("ligengchao View"," useResourceCache: " + mResourceID + "  mRedrawCount：" + mRedrawCount + "  viewType: " + viewType); 
+//				useResourceCache(); 
+//				return;
+//			}
 			//ligengchao end 
         }
     }

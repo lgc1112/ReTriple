@@ -16,13 +16,13 @@ ViewResourceCache::ViewResourceCache() : Singleton<ViewResourceCache>() {
 }
 
 
-ResourceData& ViewResourceCache::getResourceData(string id) {
-	return *mResourceData[id];
-}
+//ResourceData& ViewResourceCache::getResourceData(string id) {
+//	return *mResourceData[id];
+//}
 
-void ViewResourceCache::setResourceData(string id, ResourceData* data) {
-	mResourceData[id] = data;
-}
+//void ViewResourceCache::setResourceData(string id, ResourceData* data) {
+//	mResourceData[id] = data;
+//}
 
 void ViewResourceCache::generate(string id) {
 
@@ -35,6 +35,13 @@ void ViewResourceCache::generate(string id) {
 		mResourceData[id]->hasReGenerated = true;
 	}
 
+}
+
+int ViewResourceCache::getRedrawCount(string id) {
+	if (mResourceData[id] == NULL) {
+		return -1;
+	}
+	return mResourceData[id]->reDrawCount;
 }
 
 void ViewResourceCache::draw(string id) {

@@ -89,10 +89,64 @@ RenderNode::~RenderNode() {
     LayerRenderer::destroyLayerDeferred(mLayer);
 }
 //ligengchao start
-//void RenderNode::updateResource(const char* name) {
-	//ViewResourceCache::getInstance().generate(name);
-//}
+void RenderNode::compareDisplayList(DisplayListData* newData, DisplayListData* oldData) {
+	char str[32];	
+
+	string s1;
+	int count1 = 0,count2 = 0;
+	if(newData == NULL){
+		LOGD("compareDisplayList: newDataIsNULL");
+	}else if(newData->isEmpty()){
+		LOGD("compareDisplayList: newDataIsEmpty");
+	}else{
+		count1 = newData->displayListOps.size();
+		for (int i = 0; i < count1; i++)
+		{
+			memset(str, 0, sizeof(char)*32);
+			sprintf(str, "%d  ", newData->displayListOps[i]->type);
+			s1 = s1 + str;
+		}
+		LOGD("compareDisplayList: newDataDisplayListOpsSize: %d", count1);
+		LOGD("compareDisplayList: newDataDisplayListOpsType: %s", s1.c_str());
+	}
+	if(oldData == NULL ){
+		LOGD("compareDisplayList: oldDataIsNULL");
+	}else if(oldData->isEmpty()){
+		LOGD("compareDisplayList: oldDataIsEmpty");
+	}else{
+		s1 = "";
+		count2 = oldData->displayListOps.size();
+		if(count1 == count2){
+			for (int i = 0; i < count2; i++)
+			{
+				memset(str, 0, sizeof(char)*32);
+				sprintf(str, "%d:%d  ", oldData->displayListOps[i]->type, oldData->displayListOps[i]->equal(newData->displayListOps[i]));
+				s1 = s1 + str;
+			}
+			LOGD("compareDisplayList: oldDataDisplayListOpsSize: %d", count2);
+			LOGD("compareDisplayList: oldDataDisplayListOpsType: %s", s1.c_str());
+
+		}else{
+			for (int i = 0; i < count2; i++)
+			{
+				memset(str, 0, sizeof(char)*32);
+				sprintf(str, "%d  ", oldData->displayListOps[i]->type);
+				s1 = s1 + str;
+			}
+			LOGD("compareDisplayList: oldDataDisplayListOpsSize: %d", count2);
+			LOGD("compareDisplayList: oldDataDisplayListOpsType: %s", s1.c_str());
+
+		}
+		
+	}
+	
+	
+
+
+
+}
 //ligengchao end
+
 
 void RenderNode::setStagingDisplayList(DisplayListData* data) {
 	//ligengchao start
@@ -102,12 +156,22 @@ void RenderNode::setStagingDisplayList(DisplayListData* data) {
 		s = getName();
 		LOGD("update: ResourceID(Name): %s", s.c_str());
 	}else{
-		LOGD("update: ResourceID: %s", s.c_str()); 
+		LOGD("update: ResourceID: %s RedrawCount: %d", s.c_str(), ViewResourceCache::getInstance().getRedrawCount(s)); 
+		ViewResourceCache::getInstance().generate(s); 
+		if(ViewResourceCache::getInstance().getRedrawCount(s) > 10){
+			LOGD("compareDisplayList: ResourceID: %s RedrawCount: %d", s.c_str(), ViewResourceCache::getInstance().getRedrawCount(s)); 
+			compareDisplayList(data, mDisplayListData);
+		}
+		
 	}
-	ViewResourceCache::getInstance().generate(s);
+	
+
+	
 	//ligengchao end
 
     mNeedsDisplayListDataSync = true;
+
+	
     delete mStagingDisplayListData;
     mStagingDisplayListData = data;
     if (mStagingDisplayListData) {
@@ -598,6 +662,8 @@ private:
 };
 
 int ii = 0;//ligengchao
+
+
 void RenderNode::defer(DeferStateStruct& deferStruct, const int level) {
 	//ligengchao start
 	std::string s = getResourceID();
@@ -605,37 +671,37 @@ void RenderNode::defer(DeferStateStruct& deferStruct, const int level) {
 		s = getName();
 		LOGD("defer: ResourceID(Name): %s", s.c_str());
 	}else{
-		LOGD("defer: ResourceID: %s", s.c_str()); 
-	}
-	if(hasUpdate){
-		hasUpdate = false;
-		LOGD("update: hasUpdateResource: %s", s.c_str());
-		ViewResourceCache::getInstance().generate(s); 
-		//LOGD("update: exitUpdateResource: %d", updateResources.size());
-		//for (vector<string>::iterator iter = updateResources.begin(); iter != updateResources.end(); ++iter){
-		//	ViewResourceCache::getInstance().generate(*iter);
-		//	LOGD("update: updateResources: %s", (*iter).c_str()); 
-		//}
-		//updateResources.erase(updateResources.begin(), updateResources.end());
-	}
-	
-
-	ViewResourceCache::getInstance().draw(s);
-	ii++;
-	if(ii >= 500){ 
-		LOGD("defer: s.max_size(): %d", s.max_size()); 
-		ii = 0;
-	  	int len =  ViewResourceCache::getInstance().print().length();
-		const char* sPrint = ViewResourceCache::getInstance().print().c_str();
-		while(len > 900){ 
-			len -= 900; 
-			LOGD("defer: ResourceCache: %-900.900s", sPrint); 
-			sPrint += 900; 
-			
+		
+		if(hasUpdate){
+			hasUpdate = false;
+			//LOGD("update: hasUpdateResource: %s", s.c_str());
+			ViewResourceCache::getInstance().generate(s); 
+			//LOGD("update: exitUpdateResource: %d", updateResources.size());
+			//for (vector<string>::iterator iter = updateResources.begin(); iter != updateResources.end(); ++iter){
+			//	ViewResourceCache::getInstance().generate(*iter);
+			//	LOGD("update: updateResources: %s", (*iter).c_str()); 
+			//}
+			//updateResources.erase(updateResources.begin(), updateResources.end());
 		}
-		LOGD("defer: ResourceCache: %s", sPrint);
-		//LOGD("defer: ResourceCache: %s", ViewResourceCache::getInstance().print().c_str()); 
+		ViewResourceCache::getInstance().draw(s);
+		LOGD("defer: ResourceID: %s RedrawCount: %d", s.c_str(), ViewResourceCache::getInstance().getRedrawCount(s)); 
+		
 	}
+//	ii++;
+//	if(ii >= 1000){ 
+//		LOGD("defer: s.max_size(): %d", s.max_size()); 
+//		ii = 0;
+//	  	int len =  ViewResourceCache::getInstance().print().length();
+//		const char* sPrint = ViewResourceCache::getInstance().print().c_str();
+//		while(len > 900){ 
+//			len -= 900; 
+//			LOGD("defer: ResourceCache: %-900.900s", sPrint); 
+//			sPrint += 900; 
+//			
+//		}
+//		LOGD("defer: ResourceCache: %s", sPrint);
+//		//LOGD("defer: ResourceCache: %s", ViewResourceCache::getInstance().print().c_str()); 
+//	}
 	//ligengchao end
 
     DeferOperationHandler handler(deferStruct, level);

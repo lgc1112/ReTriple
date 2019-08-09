@@ -43,6 +43,10 @@
 // Use OP_LOG for logging with arglist, OP_LOGS if just printing char*
 #define OP_LOGS(s) OP_LOG("%s", (s))
 #define OP_LOG(s, ...) ALOGD( "%*s" s, level * 2, "", __VA_ARGS__ )
+//ligengchao start
+//#define TAG    "ligengchao RenderNode" // 这个是自定义的LOG的标识  
+//#define LOGD(...)  //__android_log_print(ANDROID_LOG_DEBUG,TAG,__VA_ARGS__) // 定义LOGD类型  
+//ligengchao end
 
 namespace android {
 namespace uirenderer {
@@ -58,11 +62,63 @@ namespace uirenderer {
  * never called as LinearAllocators are simply discarded, so no memory management should be done in
  * this class.
  */
+ //ligengchao start
+ enum DisplayListOpType {
+        DisplayListOpT,
+        StateOpT,
+        DrawOpT,
+        DrawBoundedOpT,
+        SaveOpT,
+        RestoreToCountOpT,
+        SaveLayerOpT,
+        TranslateOpT,
+        RotateOpT,
+        ScaleOpT,
+        SkewOpT,
+        SetMatrixOpT,
+        ConcatMatrixOpT,
+        ClipOpT,
+        ClipRectOpT,
+        ClipPathOpT,
+        ClipRegionOpT,
+        ResetPaintFilterOpT,
+        SetupPaintFilterOpT,
+        DrawBitmapOpT,
+        DrawBitmapRectOpT,
+        DrawBitmapDataOpT,
+        DrawBitmapMeshOpT,
+        DrawPatchOpT,
+        DrawColorOpT,
+        DrawStrokableOpT,
+        DrawRectOpT,
+        DrawRectsOpT,
+        DrawRoundRectOpT,
+        DrawRoundRectPropsOpT,
+        DrawCircleOpT,
+        DrawCirclePropsOpT,
+        DrawOvalOpT,
+        DrawArcOpT,
+        DrawPathOpT,
+        DrawLinesOpT,
+        DrawPointsOpT,
+        DrawSomeTextOpT,
+        DrawTextOnPathOpT,
+        DrawPosTextOpT,
+        DrawTextOpT,
+        DrawFunctorOpT,
+        DrawRenderNodeOpT,
+        DrawShadowOpT,
+        DrawLayerOpT,
+    };
+//ligengchao end
+
 class DisplayListOp {
 public:
     // These objects should always be allocated with a LinearAllocator, and never destroyed/deleted.
     // standard new() intentionally not implemented, and delete/deconstructor should never be used.
-    virtual ~DisplayListOp() { CRASH(); }
+	DisplayListOp() {  type = DisplayListOpT;}//ligengchao
+
+	virtual ~DisplayListOp() { CRASH(); }
     static void operator delete(void* ptr) { CRASH(); }
     /** static void* operator new(size_t size); PURPOSELY OMITTED **/
     static void* operator new(size_t size, LinearAllocator& allocator) {
@@ -85,11 +141,27 @@ public:
     // NOTE: it would be nice to declare constants and overriding the implementation in each op to
     // point at the constants, but that seems to require a .cpp file
     virtual const char* name() = 0;
+
+	//ligengchao start
+
+	virtual bool equal(DisplayListOp* DisplayListOp2){
+		return false;
+	}
+	
+	virtual bool equal2(DisplayListOp* DisplayListOp2){
+		return type == DisplayListOp2->type;
+	}
+
+
+	int type;
+	//ligengchao end
 };
 
 class StateOp : public DisplayListOp {
 public:
-    StateOp() {};
+    StateOp() {
+		type = StateOpT;//ligengchao 
+	}
 
     virtual ~StateOp() {}
 
@@ -109,13 +181,22 @@ public:
     }
 
     virtual void applyState(OpenGLRenderer& renderer, int saveCount) const = 0;
+
+	//ligengchao start
+
+	virtual bool equal2(DisplayListOp* DisplayListOp2){
+		return type == DisplayListOp2->type;
+	}
+	//ligengchao end
 };
 
 class DrawOp : public DisplayListOp {
 friend class MergingDrawBatch;
 public:
     DrawOp(const SkPaint* paint)
-            : mPaint(paint), mQuickRejected(false) {}
+            : mPaint(paint), mQuickRejected(false) {
+		type = DrawOpT;//ligengchao 
+	}
 
     virtual void defer(DeferStateStruct& deferStruct, int saveCount, int level,
             bool useQuickReject) {
@@ -197,6 +278,55 @@ public:
         return fmaxf(mPaint->getStrokeWidth(), 1) * 0.5f;
     }
 
+
+bool compare(const SkPaint& a, const SkPaint& b) {
+//#define EQUAL(field) (a.field == b.field)
+	// Don't check fGenerationID or fDirtyBits, which can be different for logically equal paints.
+	if(&a != NULL && &b != NULL)
+		return a.getColor() == b.getColor();
+	return false;
+//	EQUAL(getTypeface())
+//		&& EQUAL(getPathEffect())
+//		&& EQUAL(getShader())
+//		&& EQUAL(getXfermode())
+//		&& EQUAL(getMaskFilter())
+//		&& EQUAL(getColorFilter())
+//		&& EQUAL(getRasterizer())
+//		&& EQUAL(getLooper())
+//		&& EQUAL(getImageFilter())
+//		&& EQUAL(getAnnotation())
+//		 EQUAL(getTextSize())
+//		&& EQUAL(getTextScaleX())
+//		&& EQUAL(getTextSkewX())
+//		&& EQUAL(getColor())
+//		&& EQUAL(getStrokeWidth())
+//		&& EQUAL(getStrokeMiter())
+		//&& EQUAL(getBitfields())
+
+//		&& EQUAL(fPaintOptionsAndroid)
+
+//		&& EQUAL(fpPaintOptionsAndroid)
+
+		;
+//#undef EQUAL
+}
+
+//ligengchao start
+	const SkPaint* getmPaint() const { return mPaint; }
+	bool getmQuickRejected() const { return mQuickRejected; }
+
+	virtual bool equal2(const DisplayListOp* DisplayListOp2){
+//		LOGD("DrawOp: %d %d %d %d ",type == DisplayListOp2->type, getmQuickRejected() == 
+//			((DrawOp*)DisplayListOp2)->getmQuickRejected(), getmPaint() 
+//			 , (((DrawOp*)DisplayListOp2)->getmPaint()));
+		if(type == DisplayListOp2->type && getmQuickRejected() == ((DrawOp*)DisplayListOp2)->getmQuickRejected() && getmPaint() 
+			 && (((DrawOp*)DisplayListOp2)->getmPaint()) && *getmPaint() == *(((DrawOp*)DisplayListOp2)->getmPaint()))
+			return true;
+		return false;
+	}
+
+//ligengchao end
+
 protected:
     const SkPaint* getPaint(OpenGLRenderer& renderer) {
         return renderer.filterPaint(mPaint);
@@ -235,16 +365,21 @@ protected:
 class DrawBoundedOp : public DrawOp {
 public:
     DrawBoundedOp(float left, float top, float right, float bottom, const SkPaint* paint)
-            : DrawOp(paint), mLocalBounds(left, top, right, bottom) {}
+            : DrawOp(paint), mLocalBounds(left, top, right, bottom) {
+		type = DrawBoundedOpT;//ligengchao 
+	}
 
     DrawBoundedOp(const Rect& localBounds, const SkPaint* paint)
-            : DrawOp(paint), mLocalBounds(localBounds) {}
+            : DrawOp(paint), mLocalBounds(localBounds) {
+		type = DrawBoundedOpT;//ligengchao 
+	}
 
     // Calculates bounds as smallest rect encompassing all points
     // NOTE: requires at least 1 vertex, and doesn't account for stroke size (should be handled in
     // subclass' constructor)
     DrawBoundedOp(const float* points, int count, const SkPaint* paint)
             : DrawOp(paint), mLocalBounds(points[0], points[1], points[0], points[1]) {
+		type = DrawBoundedOpT;//ligengchao 
         for (int i = 2; i < count; i += 2) {
             mLocalBounds.left = fminf(mLocalBounds.left, points[i]);
             mLocalBounds.right = fmaxf(mLocalBounds.right, points[i]);
@@ -254,7 +389,9 @@ public:
     }
 
     // default empty constructor for bounds, to be overridden in child constructor body
-    DrawBoundedOp(const SkPaint* paint): DrawOp(paint) { }
+    DrawBoundedOp(const SkPaint* paint): DrawOp(paint) {
+		type = DrawBoundedOpT;//ligengchao 
+	}
 
     virtual bool getLocalBounds(Rect& localBounds) {
         localBounds.set(mLocalBounds);
@@ -267,6 +404,19 @@ public:
         }
         return true;
     }
+	//ligengchao start
+
+	Rect getmLocalBounds() const { return mLocalBounds; }//ligengchao
+	virtual bool equal2(DisplayListOp* DisplayListOp2){
+//		LOGD("DrawBoundedOp: %d %f %f %f %f %f %f %f %f ",this->DrawOp::equal2(DisplayListOp2), 
+//			getmLocalBounds().left, getmLocalBounds().right, getmLocalBounds().top, getmLocalBounds().bottom, 
+//			((DrawBoundedOp*)DisplayListOp2)->getmLocalBounds().left, ((DrawBoundedOp*)DisplayListOp2)->getmLocalBounds().right,
+//			((DrawBoundedOp*)DisplayListOp2)->getmLocalBounds().top, ((DrawBoundedOp*)DisplayListOp2)->getmLocalBounds().bottom);
+		if(this->DrawOp::equal2(DisplayListOp2) && getmLocalBounds() == ((DrawBoundedOp*)DisplayListOp2)->getmLocalBounds())
+			return true;
+		return false;
+	}
+	//ligengchao end
 
 protected:
     Rect mLocalBounds; // displayed area in LOCAL coord. doesn't incorporate stroke, so check paint
@@ -280,7 +430,9 @@ protected:
 class SaveOp : public StateOp {
 public:
     SaveOp(int flags)
-            : mFlags(flags) {}
+            : mFlags(flags) {
+		type = SaveOpT;//ligengchao 
+	}
 
     virtual void defer(DeferStateStruct& deferStruct, int saveCount, int level,
             bool useQuickReject) {
@@ -299,6 +451,14 @@ public:
     virtual const char* name() { return "Save"; }
 
     int getFlags() const { return mFlags; }
+
+	//ligengchao start
+	virtual bool equal(DisplayListOp* DisplayListOp2){
+		if(type == DisplayListOp2->type && getFlags() ==  ((SaveOp*)DisplayListOp2)->getFlags())
+			return true;
+		return false;
+	}
+	//ligengchao end
 private:
     int mFlags;
 };
@@ -306,8 +466,9 @@ private:
 class RestoreToCountOp : public StateOp {
 public:
     RestoreToCountOp(int count)
-            : mCount(count) {}
-
+            : mCount(count) {
+		type = RestoreToCountOpT;//ligengchao 
+	}
     virtual void defer(DeferStateStruct& deferStruct, int saveCount, int level,
             bool useQuickReject) {
         deferStruct.mDeferredList.addRestoreToCount(deferStruct.mRenderer,
@@ -324,6 +485,15 @@ public:
     }
 
     virtual const char* name() { return "RestoreToCount"; }
+	//ligengchao start
+	int getmCount() const { return mCount; }
+	virtual bool equal(DisplayListOp* DisplayListOp2){
+		if(type == DisplayListOp2->type && getmCount() == ((RestoreToCountOp*)DisplayListOp2)->getmCount())
+			return true;
+		return false;
+	}
+	//ligengchao end
+
 
 private:
     int mCount;
@@ -336,6 +506,7 @@ public:
             , mPaint(&mCachedPaint)
             , mFlags(flags)
             , mConvexMask(NULL) {
+		type = SaveLayerOpT;//ligengchao 
         mCachedPaint.setAlpha(alpha);
     }
 
@@ -343,8 +514,9 @@ public:
             : mArea(left, top, right, bottom)
             , mPaint(paint)
             , mFlags(flags)
-            , mConvexMask(NULL)
-    {}
+            , mConvexMask(NULL){
+		type = SaveLayerOpT;//ligengchao 
+   }
 
     virtual void defer(DeferStateStruct& deferStruct, int saveCount, int level,
             bool useQuickReject) {
@@ -397,7 +569,9 @@ private:
 class TranslateOp : public StateOp {
 public:
     TranslateOp(float dx, float dy)
-            : mDx(dx), mDy(dy) {}
+            : mDx(dx), mDy(dy) {
+		type = TranslateOpT;//ligengchao 
+   }
 
     virtual void applyState(OpenGLRenderer& renderer, int saveCount) const {
         renderer.translate(mDx, mDy);
@@ -417,7 +591,9 @@ private:
 class RotateOp : public StateOp {
 public:
     RotateOp(float degrees)
-            : mDegrees(degrees) {}
+            : mDegrees(degrees){
+		type = RotateOpT;//ligengchao 
+   }
 
     virtual void applyState(OpenGLRenderer& renderer, int saveCount) const {
         renderer.rotate(mDegrees);
@@ -436,7 +612,9 @@ private:
 class ScaleOp : public StateOp {
 public:
     ScaleOp(float sx, float sy)
-            : mSx(sx), mSy(sy) {}
+            : mSx(sx), mSy(sy){
+		type = ScaleOpT;//ligengchao 
+   }
 
     virtual void applyState(OpenGLRenderer& renderer, int saveCount) const {
         renderer.scale(mSx, mSy);
@@ -456,7 +634,9 @@ private:
 class SkewOp : public StateOp {
 public:
     SkewOp(float sx, float sy)
-            : mSx(sx), mSy(sy) {}
+            : mSx(sx), mSy(sy) {
+		type = SkewOpT;//ligengchao 
+   }
 
     virtual void applyState(OpenGLRenderer& renderer, int saveCount) const {
         renderer.skew(mSx, mSy);
@@ -476,7 +656,9 @@ private:
 class SetMatrixOp : public StateOp {
 public:
     SetMatrixOp(const SkMatrix& matrix)
-            : mMatrix(matrix) {}
+            : mMatrix(matrix) {
+		type = SetMatrixOpT;//ligengchao 
+   }
 
     virtual void applyState(OpenGLRenderer& renderer, int saveCount) const {
         renderer.setMatrix(mMatrix);
@@ -499,7 +681,9 @@ private:
 class ConcatMatrixOp : public StateOp {
 public:
     ConcatMatrixOp(const SkMatrix& matrix)
-            : mMatrix(matrix) {}
+            : mMatrix(matrix){
+		type = ConcatMatrixOpT;//ligengchao 
+   }
 
     virtual void applyState(OpenGLRenderer& renderer, int saveCount) const {
         renderer.concatMatrix(mMatrix);
@@ -517,7 +701,9 @@ private:
 
 class ClipOp : public StateOp {
 public:
-    ClipOp(SkRegion::Op op) : mOp(op) {}
+    ClipOp(SkRegion::Op op) : mOp(op){
+		type = ClipOpT;//ligengchao 
+   }
 
     virtual void defer(DeferStateStruct& deferStruct, int saveCount, int level,
             bool useQuickReject) {
@@ -532,6 +718,9 @@ public:
         return ((mOp != SkRegion::kIntersect_Op) && (mOp != SkRegion::kReplace_Op)) || !isRect();
     }
 
+	SkRegion::Op getmOp() const { return mOp; }//ligengchao
+	
+
 protected:
     virtual bool isRect() { return false; }
 
@@ -541,7 +730,9 @@ protected:
 class ClipRectOp : public ClipOp {
 public:
     ClipRectOp(float left, float top, float right, float bottom, SkRegion::Op op)
-            : ClipOp(op), mArea(left, top, right, bottom) {}
+            : ClipOp(op), mArea(left, top, right, bottom) {
+		type = ClipRectOpT;//ligengchao 
+   }
 
     virtual void applyState(OpenGLRenderer& renderer, int saveCount) const {
         renderer.clipRect(mArea.left, mArea.top, mArea.right, mArea.bottom, mOp);
@@ -553,6 +744,19 @@ public:
 
     virtual const char* name() { return "ClipRect"; }
 
+	//ligengchao start
+	virtual bool equal(DisplayListOp* DisplayListOp2){
+//		LOGD("ClipRectOp: %d %d", getArea() == ((ClipRectOp*)DisplayListOp2)->getArea()
+//			, getmOp() == ((ClipOp*)DisplayListOp2)->getmOp());
+		if(type == DisplayListOp2->type && getArea() == ((ClipRectOp*)DisplayListOp2)->getArea() && 
+			getmOp() == ((ClipOp*)DisplayListOp2)->getmOp())
+			return true;
+		return false;
+	}
+
+	const Rect& getArea() const { return mArea; }//ligengchao
+	//ligengchao end
+
 protected:
     virtual bool isRect() { return true; }
 
@@ -563,7 +767,9 @@ private:
 class ClipPathOp : public ClipOp {
 public:
     ClipPathOp(const SkPath* path, SkRegion::Op op)
-            : ClipOp(op), mPath(path) {}
+            : ClipOp(op), mPath(path) {
+		type =ClipPathOpT;//ligengchao 
+   }
 
     virtual void applyState(OpenGLRenderer& renderer, int saveCount) const {
         renderer.clipPath(mPath, mOp);
@@ -584,7 +790,9 @@ private:
 class ClipRegionOp : public ClipOp {
 public:
     ClipRegionOp(const SkRegion* region, SkRegion::Op op)
-            : ClipOp(op), mRegion(region) {}
+            : ClipOp(op), mRegion(region) {
+		type = ClipRegionOpT;//ligengchao 
+   }
 
     virtual void applyState(OpenGLRenderer& renderer, int saveCount) const {
         renderer.clipRegion(mRegion, mOp);
@@ -604,6 +812,9 @@ private:
 
 class ResetPaintFilterOp : public StateOp {
 public:
+	ResetPaintFilterOp(){//ligengchao 
+		type = ResetPaintFilterOpT;//ligengchao 
+   }
     virtual void applyState(OpenGLRenderer& renderer, int saveCount) const {
         renderer.resetPaintFilter();
     }
@@ -618,7 +829,9 @@ public:
 class SetupPaintFilterOp : public StateOp {
 public:
     SetupPaintFilterOp(int clearBits, int setBits)
-            : mClearBits(clearBits), mSetBits(setBits) {}
+            : mClearBits(clearBits), mSetBits(setBits) {
+		type = SetupPaintFilterOpT;//ligengchao 
+   }
 
     virtual void applyState(OpenGLRenderer& renderer, int saveCount) const {
         renderer.setupPaintFilter(mClearBits, mSetBits);
@@ -645,6 +858,7 @@ public:
             : DrawBoundedOp(0, 0, bitmap->width(), bitmap->height(), paint)
             , mBitmap(bitmap)
             , mAtlas(Caches::getInstance().assetAtlas) {
+		type = DrawBitmapOpT;//ligengchao 
         mEntry = mAtlas.getEntry(bitmap);
         if (mEntry) {
             mEntryGenerationId = mAtlas.getGenerationId();
@@ -739,6 +953,26 @@ public:
     }
 
     const SkBitmap* bitmap() { return mBitmap; }
+
+//	//ligengchao start
+//	bool compareBitmap(const SkBitmap1*, const SkBitmap2*){
+//		LOGD("DrawBitmapOp: %d %d %d %d",this->DrawBoundedOp::equal2(DisplayListOp2), bitmap()->info() == ((DrawBitmapOp*)DisplayListOp2)->bitmap()->info()
+//			, !memcmp(bitmap()->getPixels(), ((DrawBitmapOp*)DisplayListOp2)->bitmap()->getPixels(), bitmap()->getSize()), bitmap()->getSize()
+
+//		return !memcmp(bitmap()->getPixels(), ((DrawBitmapOp*)DisplayListOp2)->bitmap()->getPixels(), bitmap->getSize())
+//			&& bitmap()->info() == ((DrawBitmapOp*)DisplayListOp2)->bitmap()->info();
+
+//		
+//	}
+	
+	virtual bool equal(DisplayListOp* DisplayListOp2){
+//		LOGD("DrawBitmapOp: %d %d",this->DrawBoundedOp::equal2(DisplayListOp2)
+//			, bitmap() == ((DrawBitmapOp*)DisplayListOp2)->bitmap());
+		if(this->DrawBoundedOp::equal2(DisplayListOp2) && bitmap() == ((DrawBitmapOp*)DisplayListOp2)->bitmap())
+			return true;
+		return false;
+	}
+	//ligengchao end
 protected:
     const SkBitmap* mBitmap;
     const AssetAtlas& mAtlas;
@@ -753,7 +987,9 @@ public:
             float srcLeft, float srcTop, float srcRight, float srcBottom,
             float dstLeft, float dstTop, float dstRight, float dstBottom, const SkPaint* paint)
             : DrawBoundedOp(dstLeft, dstTop, dstRight, dstBottom, paint),
-            mBitmap(bitmap), mSrc(srcLeft, srcTop, srcRight, srcBottom) {}
+            mBitmap(bitmap), mSrc(srcLeft, srcTop, srcRight, srcBottom) {
+		type = DrawBitmapRectOpT;//ligengchao 
+   }
 
     virtual status_t applyDraw(OpenGLRenderer& renderer, Rect& dirty) {
         return renderer.drawBitmap(mBitmap, mSrc.left, mSrc.top, mSrc.right, mSrc.bottom,
@@ -781,8 +1017,9 @@ private:
 class DrawBitmapDataOp : public DrawBitmapOp {
 public:
     DrawBitmapDataOp(const SkBitmap* bitmap, const SkPaint* paint)
-            : DrawBitmapOp(bitmap, paint) {}
-
+            : DrawBitmapOp(bitmap, paint) {
+		type =DrawBitmapDataOpT;//ligengchao 
+   }
     virtual status_t applyDraw(OpenGLRenderer& renderer, Rect& dirty) {
         return renderer.drawBitmapData(mBitmap, getPaint(renderer));
     }
@@ -805,7 +1042,9 @@ public:
             const float* vertices, const int* colors, const SkPaint* paint)
             : DrawBoundedOp(vertices, 2 * (meshWidth + 1) * (meshHeight + 1), paint),
             mBitmap(bitmap), mMeshWidth(meshWidth), mMeshHeight(meshHeight),
-            mVertices(vertices), mColors(colors) {}
+            mVertices(vertices), mColors(colors) {
+		type = DrawBitmapMeshOpT;//ligengchao 
+   }
 
     virtual status_t applyDraw(OpenGLRenderer& renderer, Rect& dirty) {
         return renderer.drawBitmapMesh(mBitmap, mMeshWidth, mMeshHeight,
@@ -838,6 +1077,7 @@ public:
             : DrawBoundedOp(left, top, right, bottom, paint),
             mBitmap(bitmap), mPatch(patch), mGenerationId(0), mMesh(NULL),
             mAtlas(Caches::getInstance().assetAtlas) {
+		type = DrawPatchOpT;//ligengchao 
         mEntry = mAtlas.getEntry(bitmap);
         if (mEntry) {
             mEntryGenerationId = mAtlas.getGenerationId();
@@ -980,7 +1220,9 @@ private:
 class DrawColorOp : public DrawOp {
 public:
     DrawColorOp(int color, SkXfermode::Mode mode)
-            : DrawOp(NULL), mColor(color), mMode(mode) {};
+            : DrawOp(NULL), mColor(color), mMode(mode) {
+		type = DrawColorOpT;//ligengchao 
+	}
 
     virtual status_t applyDraw(OpenGLRenderer& renderer, Rect& dirty) {
         return renderer.drawColor(mColor, mMode);
@@ -1000,9 +1242,13 @@ private:
 class DrawStrokableOp : public DrawBoundedOp {
 public:
     DrawStrokableOp(float left, float top, float right, float bottom, const SkPaint* paint)
-            : DrawBoundedOp(left, top, right, bottom, paint) {};
+            : DrawBoundedOp(left, top, right, bottom, paint){
+		type = DrawStrokableOpT;//ligengchao 
+	}
     DrawStrokableOp(const Rect& localBounds, const SkPaint* paint)
-            : DrawBoundedOp(localBounds, paint) {};
+            : DrawBoundedOp(localBounds, paint) {
+		type = DrawStrokableOpT;//ligengchao 
+	}
 
     virtual bool getLocalBounds(Rect& localBounds) {
         localBounds.set(mLocalBounds);
@@ -1022,12 +1268,21 @@ public:
                     DeferredDisplayList::kOpBatch_Vertices;
         }
     }
+//ligengchao start
+	virtual bool equal2(DisplayListOp* DisplayListOp2){
+		if(this->DrawBoundedOp::equal2(DisplayListOp2))
+			return true;
+		return false;
+	}
+//ligengchao end
 };
 
 class DrawRectOp : public DrawStrokableOp {
 public:
     DrawRectOp(float left, float top, float right, float bottom, const SkPaint* paint)
-            : DrawStrokableOp(left, top, right, bottom, paint) {}
+            : DrawStrokableOp(left, top, right, bottom, paint) {
+		type = DrawRectOpT;//ligengchao 
+	}
 
     virtual status_t applyDraw(OpenGLRenderer& renderer, Rect& dirty) {
         return renderer.drawRect(mLocalBounds.left, mLocalBounds.top,
@@ -1052,8 +1307,9 @@ class DrawRectsOp : public DrawBoundedOp {
 public:
     DrawRectsOp(const float* rects, int count, const SkPaint* paint)
             : DrawBoundedOp(rects, count, paint),
-            mRects(rects), mCount(count) {}
-
+            mRects(rects), mCount(count) {
+		type = DrawRectsOpT;//ligengchao 
+	}
     virtual status_t applyDraw(OpenGLRenderer& renderer, Rect& dirty) {
         return renderer.drawRects(mRects, mCount, getPaint(renderer));
     }
@@ -1078,7 +1334,9 @@ class DrawRoundRectOp : public DrawStrokableOp {
 public:
     DrawRoundRectOp(float left, float top, float right, float bottom,
             float rx, float ry, const SkPaint* paint)
-            : DrawStrokableOp(left, top, right, bottom, paint), mRx(rx), mRy(ry) {}
+            : DrawStrokableOp(left, top, right, bottom, paint), mRx(rx), mRy(ry) {
+		type = DrawRoundRectOpT;//ligengchao 
+	}
 
     virtual status_t applyDraw(OpenGLRenderer& renderer, Rect& dirty) {
         return renderer.drawRoundRect(mLocalBounds.left, mLocalBounds.top,
@@ -1110,7 +1368,9 @@ public:
     DrawRoundRectPropsOp(float* left, float* top, float* right, float* bottom,
             float *rx, float *ry, const SkPaint* paint)
             : DrawOp(paint), mLeft(left), mTop(top), mRight(right), mBottom(bottom),
-            mRx(rx), mRy(ry) {}
+            mRx(rx), mRy(ry) {
+		type =DrawRoundRectPropsOpT;//ligengchao 
+	}
 
     virtual status_t applyDraw(OpenGLRenderer& renderer, Rect& dirty) {
         return renderer.drawRoundRect(*mLeft, *mTop, *mRight, *mBottom,
@@ -1137,8 +1397,9 @@ class DrawCircleOp : public DrawStrokableOp {
 public:
     DrawCircleOp(float x, float y, float radius, const SkPaint* paint)
             : DrawStrokableOp(x - radius, y - radius, x + radius, y + radius, paint),
-            mX(x), mY(y), mRadius(radius) {}
-
+            mX(x), mY(y), mRadius(radius) {
+		type = DrawCircleOpT;//ligengchao 
+	}
     virtual status_t applyDraw(OpenGLRenderer& renderer, Rect& dirty) {
         return renderer.drawCircle(mX, mY, mRadius, getPaint(renderer));
     }
@@ -1158,8 +1419,9 @@ private:
 class DrawCirclePropsOp : public DrawOp {
 public:
     DrawCirclePropsOp(float* x, float* y, float* radius, const SkPaint* paint)
-            : DrawOp(paint), mX(x), mY(y), mRadius(radius) {}
-
+            : DrawOp(paint), mX(x), mY(y), mRadius(radius) {
+		type = DrawCirclePropsOpT;//ligengchao 
+	}
     virtual status_t applyDraw(OpenGLRenderer& renderer, Rect& dirty) {
         return renderer.drawCircle(*mX, *mY, *mRadius, getPaint(renderer));
     }
@@ -1179,7 +1441,9 @@ private:
 class DrawOvalOp : public DrawStrokableOp {
 public:
     DrawOvalOp(float left, float top, float right, float bottom, const SkPaint* paint)
-            : DrawStrokableOp(left, top, right, bottom, paint) {}
+            : DrawStrokableOp(left, top, right, bottom, paint) {
+		type = DrawOvalOpT;//ligengchao 
+	}
 
     virtual status_t applyDraw(OpenGLRenderer& renderer, Rect& dirty) {
         return renderer.drawOval(mLocalBounds.left, mLocalBounds.top,
@@ -1198,8 +1462,9 @@ public:
     DrawArcOp(float left, float top, float right, float bottom,
             float startAngle, float sweepAngle, bool useCenter, const SkPaint* paint)
             : DrawStrokableOp(left, top, right, bottom, paint),
-            mStartAngle(startAngle), mSweepAngle(sweepAngle), mUseCenter(useCenter) {}
-
+            mStartAngle(startAngle), mSweepAngle(sweepAngle), mUseCenter(useCenter) {
+		type = DrawArcOpT;//ligengchao 
+	}
     virtual status_t applyDraw(OpenGLRenderer& renderer, Rect& dirty) {
         return renderer.drawArc(mLocalBounds.left, mLocalBounds.top,
                 mLocalBounds.right, mLocalBounds.bottom,
@@ -1223,6 +1488,7 @@ class DrawPathOp : public DrawBoundedOp {
 public:
     DrawPathOp(const SkPath* path, const SkPaint* paint)
             : DrawBoundedOp(paint), mPath(path) {
+		type = DrawPathOpT;//ligengchao 
         float left, top, offset;
         uint32_t width, height;
         PathCache::computePathBounds(path, paint, left, top, offset, width, height);
@@ -1257,7 +1523,8 @@ class DrawLinesOp : public DrawBoundedOp {
 public:
     DrawLinesOp(const float* points, int count, const SkPaint* paint)
             : DrawBoundedOp(points, count, paint),
-            mPoints(points), mCount(count) {
+            mPoints(points), mCount(count)  {
+		type = DrawLinesOpT;//ligengchao 
         mLocalBounds.outset(strokeWidthOutset());
     }
 
@@ -1286,7 +1553,9 @@ protected:
 class DrawPointsOp : public DrawLinesOp {
 public:
     DrawPointsOp(const float* points, int count, const SkPaint* paint)
-            : DrawLinesOp(points, count, paint) {}
+            : DrawLinesOp(points, count, paint) {
+		type = DrawPointsOpT;//ligengchao 
+    }
 
     virtual status_t applyDraw(OpenGLRenderer& renderer, Rect& dirty) {
         return renderer.drawPoints(mPoints, mCount, getPaint(renderer));
@@ -1302,8 +1571,9 @@ public:
 class DrawSomeTextOp : public DrawOp {
 public:
     DrawSomeTextOp(const char* text, int bytesCount, int count, const SkPaint* paint)
-            : DrawOp(paint), mText(text), mBytesCount(bytesCount), mCount(count) {};
-
+            : DrawOp(paint), mText(text), mBytesCount(bytesCount), mCount(count) {
+		type = DrawSomeTextOpT;//ligengchao 
+    }
     virtual void output(int level, uint32_t logFlags) const {
         OP_LOG("Draw some text, %d bytes", mBytesCount);
     }
@@ -1335,7 +1605,7 @@ public:
             const SkPath* path, float hOffset, float vOffset, const SkPaint* paint)
             : DrawSomeTextOp(text, bytesCount, count, paint),
             mPath(path), mHOffset(hOffset), mVOffset(vOffset) {
-        /* TODO: inherit from DrawBounded and init mLocalBounds */
+		type = DrawTextOnPathOpT;//ligengchao 
     }
 
     virtual status_t applyDraw(OpenGLRenderer& renderer, Rect& dirty) {
@@ -1356,6 +1626,7 @@ public:
     DrawPosTextOp(const char* text, int bytesCount, int count,
             const float* positions, const SkPaint* paint)
             : DrawSomeTextOp(text, bytesCount, count, paint), mPositions(positions) {
+		type = DrawPosTextOpT;//ligengchao 
         /* TODO: inherit from DrawBounded and init mLocalBounds */
     }
 
@@ -1375,6 +1646,7 @@ public:
             const float* positions, const SkPaint* paint, float totalAdvance, const Rect& bounds)
             : DrawStrokableOp(bounds, paint), mText(text), mBytesCount(bytesCount), mCount(count),
             mX(x), mY(y), mPositions(positions), mTotalAdvance(totalAdvance) {
+		type = DrawTextOpT;//ligengchao 
         mPrecacheTransform = SkMatrix::InvalidMatrix();
     }
 
@@ -1434,7 +1706,30 @@ public:
 
     virtual const char* name() { return "DrawText"; }
 
-private:
+	
+	//ligengchao start
+	virtual bool equal(DisplayListOp* DisplayListOptmp){		
+		if(this->DrawBoundedOp::equal2(DisplayListOptmp)) {
+			DrawTextOp* DisplayListOp2 = (DrawTextOp*)DisplayListOptmp;
+//			for(int i = 0; i < mBytesCount; i++){
+//				LOGD("DrawTextOp: %c", mText[i]);
+//			}
+//			LOGD("DrawTextOp: %d %d %d %d %d %d %d %d",mBytesCount == DisplayListOp2->mBytesCount, mCount == DisplayListOp2->mCount, mX == DisplayListOp2->mX, 
+//				mY == DisplayListOp2->mY, *mPositions == *(DisplayListOp2->mPositions), mTotalAdvance == DisplayListOp2->mTotalAdvance
+//				, memcmp(mText, DisplayListOp2->mText, mBytesCount) == 0, mPrecacheTransform == DisplayListOp2->mPrecacheTransform );
+			if(mBytesCount == DisplayListOp2->mBytesCount && mCount == DisplayListOp2->mCount && mX == DisplayListOp2->mX && 
+				mY == DisplayListOp2->mY && *mPositions == *(DisplayListOp2->mPositions) && mTotalAdvance == DisplayListOp2->mTotalAdvance
+				&& memcmp(mText, DisplayListOp2->mText, mBytesCount) == 0){//&& mPrecacheTransform == DisplayListOp2->mPrecacheTransform 
+				return true;
+			}
+								
+		}
+			
+		return false;
+	}
+	//ligengchao end
+
+public: //ligengchao private -- public
     const char* mText;
     int mBytesCount;
     int mCount;
@@ -1452,7 +1747,9 @@ private:
 class DrawFunctorOp : public DrawOp {
 public:
     DrawFunctorOp(Functor* functor)
-            : DrawOp(NULL), mFunctor(functor) {}
+            : DrawOp(NULL), mFunctor(functor) {
+		type = DrawFunctorOpT;//ligengchao 
+    }
 
     virtual status_t applyDraw(OpenGLRenderer& renderer, Rect& dirty) {
         renderer.startMark("GL functor");
@@ -1477,7 +1774,9 @@ class DrawRenderNodeOp : public DrawBoundedOp {
 public:
     DrawRenderNodeOp(RenderNode* renderNode, int flags, const mat4& transformFromParent)
             : DrawBoundedOp(0, 0, renderNode->getWidth(), renderNode->getHeight(), 0),
-            mRenderNode(renderNode), mFlags(flags), mTransformFromParent(transformFromParent) {}
+            mRenderNode(renderNode), mFlags(flags), mTransformFromParent(transformFromParent) {
+		type = DrawRenderNodeOpT;//ligengchao 
+    }
 
     virtual void defer(DeferStateStruct& deferStruct, int saveCount, int level,
             bool useQuickReject) {
@@ -1545,6 +1844,7 @@ public:
         , mTransformZ(transformZ)
         , mCasterAlpha(casterAlpha)
         , mCasterOutline(casterOutline) {
+		type = DrawShadowOpT;//ligengchao 
     }
 
     virtual void onDefer(OpenGLRenderer& renderer, DeferInfo& deferInfo,
@@ -1583,7 +1883,9 @@ private:
 class DrawLayerOp : public DrawOp {
 public:
     DrawLayerOp(Layer* layer, float x, float y)
-            : DrawOp(NULL), mLayer(layer), mX(x), mY(y) {}
+            : DrawOp(NULL), mLayer(layer), mX(x), mY(y) {
+		type = DrawLayerOpT;//ligengchao 
+    }
 
     virtual status_t applyDraw(OpenGLRenderer& renderer, Rect& dirty) {
         return renderer.drawLayer(mLayer, mX, mY);
