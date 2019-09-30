@@ -14217,11 +14217,11 @@ public class View implements Drawable.Callback, KeyEvent.Callback,
                 mPrivateFlags |= PFLAG_DRAWN | PFLAG_DRAWING_CACHE_VALID;
                 mPrivateFlags &= ~PFLAG_DIRTY_MASK;
                 dispatchGetDisplayList();
-				mRenderNode.updateResource();
+				mRenderNode.updateResource();//ligengchao
 				mRedrawCount = 0;//ligengchao
 				mResourceDrawingCache = null;//ligengchao
 				needUpdateRenderNode = true;//ligengchao
-				Log.d("ligengchao View"," dispatchGetDisplayList: " + mResourceID);  //ligengchao
+				//Log.d("ligengchao View"," dispatchGetDisplayList: " + mResourceID);  //ligengchao
                 return; // no work needed
             }
 
@@ -14240,14 +14240,14 @@ public class View implements Drawable.Callback, KeyEvent.Callback,
                 final HardwareLayer layer = getHardwareLayer();
                 if (layer != null && layer.isValid()) {
                     canvas.drawHardwareLayer(layer, 0, 0, mLayerPaint);
-					viewType = 1;
+					viewType = 1;//ligengchao
                 } else if (layerType == LAYER_TYPE_SOFTWARE) {
                     buildDrawingCache(true);
                     Bitmap cache = getDrawingCache(true);
                     if (cache != null) {
                         canvas.drawBitmap(cache, 0, 0, mLayerPaint);
                     }
-					viewType = 2;
+					viewType = 2;//ligengchao
                 } else {
                     computeScroll();
 
@@ -14265,7 +14265,7 @@ public class View implements Drawable.Callback, KeyEvent.Callback,
                         draw(canvas);
                     }
                     drawAccessibilityFocus(canvas);
-					viewType = 3;
+					viewType = 3;//ligengchao
                 }
             } finally {
                 renderNode.end(canvas);
@@ -14278,11 +14278,15 @@ public class View implements Drawable.Callback, KeyEvent.Callback,
             mPrivateFlags |= PFLAG_DRAWN | PFLAG_DRAWING_CACHE_VALID;
             mPrivateFlags &= ~PFLAG_DIRTY_MASK;
 			//ligengchao start
-//			if(mRedrawCount > 10){
-//				Log.d("ligengchao View"," useResourceCache: " + mResourceID + "  mRedrawCount：" + mRedrawCount + "  viewType: " + viewType); 
-//				useResourceCache(); 
-//				return;
-//			}
+			if(mRedrawCount > 10){
+				int childViewNumber = 0;
+				if(this instanceof ViewGroup)
+					childViewNumber = ((ViewGroup)this).getChildViewNumber(mResourceID);
+				
+				Log.d("ligengchao View"," useResourceCache: " + mResourceID + "  mRedrawCount：" + mRedrawCount + "  ChildViewNumber：" + childViewNumber); 
+				//useResourceCache(); 
+				return;
+			}
 			//ligengchao end 
         }
     }
@@ -14296,7 +14300,7 @@ public class View implements Drawable.Callback, KeyEvent.Callback,
      * @hide
      */
     public RenderNode getDisplayList() {
-    	Log.d("ligengchao View"," getDisplayListView: " + mResourceID);  //ligengchao
+    	//Log.d("ligengchao View"," getDisplayListView: " + mResourceID);  //ligengchao
     	mRedrawCount++;//ligengchao
         updateDisplayListIfDirty();
         return mRenderNode;

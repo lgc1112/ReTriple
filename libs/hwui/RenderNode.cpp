@@ -145,6 +145,39 @@ void RenderNode::compareDisplayList(DisplayListData* newData, DisplayListData* o
 
 
 }
+
+string RenderNode::printDisplayList(DisplayListData* Data) {
+	char str[32];	
+
+	string s1;
+	int count1 = 0;
+	if(Data == NULL){
+		s1 = "DataIsNULL";
+		//LOGD("compareDisplayList: newDataIsNULL");
+	}else if(Data->isEmpty()){
+		s1 = "DataIsEmpty";
+		//LOGD("compareDisplayList: newDataIsEmpty");
+	}else{
+		s1 = "DataTypeIs:";
+		count1 = Data->displayListOps.size();
+		for (int i = 0; i < count1; i++)
+		{
+			memset(str, 0, sizeof(char)*32);
+			sprintf(str, "%d  ", Data->displayListOps[i]->type);
+			s1 = s1 + str;
+		}
+		memset(str, 0, sizeof(char)*32);
+		sprintf(str, "DataSizeIs:%d  ", count1);
+		s1 = s1 + str;
+	}
+	return s1;
+	
+	
+
+
+
+}
+
 //ligengchao end
 
 
@@ -154,9 +187,9 @@ void RenderNode::setStagingDisplayList(DisplayListData* data) {
 	
 	if(s.length() == 0){
 		s = getName();
-		LOGD("update: ResourceID(Name): %s", s.c_str());
+		//LOGD("update: ResourceID(Name): %s", s.c_str());
 	}else{
-		LOGD("update: ResourceID: %s RedrawCount: %d", s.c_str(), ViewResourceCache::getInstance().getRedrawCount(s)); 
+		//LOGD("update: ResourceID: %s RedrawCount: %d", s.c_str(), ViewResourceCache::getInstance().getRedrawCount(s)); 
 		ViewResourceCache::getInstance().generate(s); 
 		if(ViewResourceCache::getInstance().getRedrawCount(s) > 10){
 			LOGD("compareDisplayList: ResourceID: %s RedrawCount: %d", s.c_str(), ViewResourceCache::getInstance().getRedrawCount(s)); 
@@ -684,7 +717,8 @@ void RenderNode::defer(DeferStateStruct& deferStruct, const int level) {
 			//updateResources.erase(updateResources.begin(), updateResources.end());
 		}
 		ViewResourceCache::getInstance().draw(s);
-		LOGD("defer: ResourceID: %s RedrawCount: %d", s.c_str(), ViewResourceCache::getInstance().getRedrawCount(s)); 
+		string s2 = printDisplayList(mDisplayListData);
+		LOGD("defer: ResourceID: %s RedrawCount: %d %s", s.c_str(), ViewResourceCache::getInstance().getRedrawCount(s), s2.c_str()); 
 		
 	}
 //	ii++;

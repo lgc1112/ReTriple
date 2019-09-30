@@ -165,6 +165,8 @@ public:
 
 	void compareDisplayList(DisplayListData* newData, DisplayListData* oldData); 
 
+	string printDisplayList(DisplayListData* Data); 
+
 //ligengchao end
 
     bool isPropertyFieldDirty(DirtyPropertyMask field) const {
