@@ -14200,8 +14200,22 @@ public class View implements Drawable.Callback, KeyEvent.Callback,
 
 
 //ligengchao end 
+	final int[] predictTable = {-1, 3, 3, 3, 5, 7};//ligengchao 
     private void updateDisplayListIfDirty() {
         final RenderNode renderNode = mRenderNode;
+		//ligengchao start
+		int DLCount = renderNode.getDLCount();
+		int mRedrawCountNatice = renderNode.getRedrawCount();
+		int DLThreshold = 0;
+		if(DLCount > 3){
+			DLThreshold = (3 * DLCount / (DLCount - 3));
+		}
+		if(DLThreshold > 5)
+			DLThreshold = 0;
+		int PredictThreshold = predictTable[DLThreshold];
+		Log.d("ligengchao View"," updateDisplayListIfDirty: " + mResourceID + "  mRedrawCount：" + (mRedrawCount - 1) + "  mRedrawCountNatice:" 
+			+ mRedrawCountNatice + "  DLCount:" + DLCount + "  DLThreshold:" +  DLThreshold + "  PredictThreshold:" +  PredictThreshold );
+		//ligengchao end
         if (!canHaveDisplayList()) {
             // can't populate RenderNode, don't try
             return;
@@ -14278,15 +14292,22 @@ public class View implements Drawable.Callback, KeyEvent.Callback,
             mPrivateFlags |= PFLAG_DRAWN | PFLAG_DRAWING_CACHE_VALID;
             mPrivateFlags &= ~PFLAG_DIRTY_MASK;
 			//ligengchao start
-			if(mRedrawCount > 10){
-				int childViewNumber = 0;
-				if(this instanceof ViewGroup)
-					childViewNumber = ((ViewGroup)this).getChildViewNumber(mResourceID);
-				
-				Log.d("ligengchao View"," useResourceCache: " + mResourceID + "  mRedrawCount：" + mRedrawCount + "  ChildViewNumber：" + childViewNumber); 
+
+			if(mRedrawCountNatice > PredictThreshold && PredictThreshold ！= -1){
+				Log.d("ligengchao View"," useResourceCache: " + mResourceID); 
 				//useResourceCache(); 
-				return;
+				
 			}
+			
+//			if(mRedrawCount > 10){
+//				int childViewNumber = 0;
+//				if(this instanceof ViewGroup)
+//					childViewNumber = ((ViewGroup)this).getChildViewNumber(mResourceID);
+				
+				//Log.d("ligengchao View"," useResourceCache: " + mResourceID + "  mRedrawCount：" + mRedrawCount + "  ChildViewNumber：" + childViewNumber); 
+				//useResourceCache(); 
+//				return;
+//			}
 			//ligengchao end 
         }
     }

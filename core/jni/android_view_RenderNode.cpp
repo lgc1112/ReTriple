@@ -101,6 +101,19 @@ static void android_view_RenderNode_updateResource(JNIEnv* env, jobject clazz, j
 	
 }
 
+
+static jint android_view_RenderNode_getDLCount(JNIEnv* env,
+        jobject clazz, jlong renderNodePtr) {
+    RenderNode* renderNode = reinterpret_cast<RenderNode*>(renderNodePtr);
+    return renderNode->getAllDLNumber();
+}
+
+static jint android_view_RenderNode_getRedrawCount(JNIEnv* env,
+		jobject clazz, jlong renderNodePtr) {
+	RenderNode* renderNode = reinterpret_cast<RenderNode*>(renderNodePtr);
+	return renderNode->getRedrawCount();
+}
+
 //ligengchao end
 
 static void android_view_RenderNode_destroyRenderNode(JNIEnv* env,
@@ -516,6 +529,8 @@ static JNINativeMethod gMethods[] = {
     { "nSetDisplayListData",   "(JJ)V", (void*) android_view_RenderNode_setDisplayListData },
     { "nOutput",               "(J)V",  (void*) android_view_RenderNode_output },
     { "nGetDebugSize",         "(J)I",  (void*) android_view_RenderNode_getDebugSize },
+    { "nGetRedrawCount",         "(J)I",  (void*) android_view_RenderNode_getRedrawCount },//ligengchao
+    { "nGetDLCount",         "(J)I",  (void*) android_view_RenderNode_getDLCount },//ligengchao
 
     { "nSetLayerType",         "(JI)Z",  (void*) android_view_RenderNode_setLayerType },
     { "nSetLayerPaint",        "(JJ)Z",  (void*) android_view_RenderNode_setLayerPaint },

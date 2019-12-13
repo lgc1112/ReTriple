@@ -80,7 +80,10 @@ RenderNode::RenderNode()
         , mStagingDisplayListData(0)
         , mAnimatorManager(*this)
         , mLayer(0)
-        , mParentCount(0) {
+        , mParentCount(0)
+        , allDLNumber(0)//ligengchao
+        , ownDLNumber(0)//ligengchao
+        , redrawCount(0){//ligengchao
 }
 
 RenderNode::~RenderNode() {
@@ -153,8 +156,10 @@ string RenderNode::printDisplayList(DisplayListData* Data) {
 	int count1 = 0;
 	if(Data == NULL){
 		s1 = "DataIsNULL";
+		ownDLNumber = 0;
 		//LOGD("compareDisplayList: newDataIsNULL");
 	}else if(Data->isEmpty()){
+		ownDLNumber = 0;
 		s1 = "DataIsEmpty";
 		//LOGD("compareDisplayList: newDataIsEmpty");
 	}else{
@@ -167,16 +172,37 @@ string RenderNode::printDisplayList(DisplayListData* Data) {
 			s1 = s1 + str;
 		}
 		memset(str, 0, sizeof(char)*32);
-		sprintf(str, "DataSizeIs:%d  ", count1);
+		ownDLNumber = count1;
+		sprintf(str, "ownDLNumber:%d  ", ownDLNumber);
 		s1 = s1 + str;
 	}
 	return s1;
 	
-	
-
-
-
 }
+
+
+
+
+
+int RenderNode::updateAllDLNumber(){
+	int childDLNumber = 0;
+	for(int i = 0; i < mDisplayListData->children().size(); i++){
+		DrawRenderNodeOp* childOp = mDisplayListData->children()[i];
+		RenderNode* child = childOp->mRenderNode;
+		childDLNumber += child->updateAllDLNumber();
+	}
+	allDLNumber = ownDLNumber + childDLNumber;
+	//LOGD("updateAllDLNumber: ResourceID(Name): %s allDLNumber: %d  redrawCount: %d", getResourceID(), allDLNumber, redrawCount);
+	return allDLNumber;
+}
+
+//int RenderNode::getAllDLNumber(){
+//	return allDLNumber;
+//}
+
+//int RenderNode::getRedrawCount(){
+//	return redrawCount;
+//}
 
 //ligengchao end
 
@@ -184,17 +210,18 @@ string RenderNode::printDisplayList(DisplayListData* Data) {
 void RenderNode::setStagingDisplayList(DisplayListData* data) {
 	//ligengchao start
 	std::string s = getResourceID();
-	
+	hasUpdate = true;
+	redrawCount = 0;
 	if(s.length() == 0){
 		s = getName();
 		//LOGD("update: ResourceID(Name): %s", s.c_str());
 	}else{
 		//LOGD("update: ResourceID: %s RedrawCount: %d", s.c_str(), ViewResourceCache::getInstance().getRedrawCount(s)); 
-		ViewResourceCache::getInstance().generate(s); 
-		if(ViewResourceCache::getInstance().getRedrawCount(s) > 10){
-			LOGD("compareDisplayList: ResourceID: %s RedrawCount: %d", s.c_str(), ViewResourceCache::getInstance().getRedrawCount(s)); 
-			compareDisplayList(data, mDisplayListData);
-		}
+//		ViewResourceCache::getInstance().generate(s); 
+//		if(ViewResourceCache::getInstance().getRedrawCount(s) > 10){
+//			LOGD("compareDisplayList: ResourceID: %s RedrawCount: %d", s.c_str(), ViewResourceCache::getInstance().getRedrawCount(s)); 
+//			compareDisplayList(data, mDisplayListData);
+//		}
 		
 	}
 	
@@ -704,21 +731,23 @@ void RenderNode::defer(DeferStateStruct& deferStruct, const int level) {
 		s = getName();
 		LOGD("defer: ResourceID(Name): %s", s.c_str());
 	}else{
-		
 		if(hasUpdate){
 			hasUpdate = false;
+			redrawCount = 0;
 			//LOGD("update: hasUpdateResource: %s", s.c_str());
-			ViewResourceCache::getInstance().generate(s); 
+			//ViewResourceCache::getInstance().generate(s); 
 			//LOGD("update: exitUpdateResource: %d", updateResources.size());
 			//for (vector<string>::iterator iter = updateResources.begin(); iter != updateResources.end(); ++iter){
 			//	ViewResourceCache::getInstance().generate(*iter);
 			//	LOGD("update: updateResources: %s", (*iter).c_str()); 
 			//}
 			//updateResources.erase(updateResources.begin(), updateResources.end());
+		}else{
+			redrawCount++;
 		}
-		ViewResourceCache::getInstance().draw(s);
+		//ViewResourceCache::getInstance().draw(s);
 		string s2 = printDisplayList(mDisplayListData);
-		LOGD("defer: ResourceID: %s RedrawCount: %d %s", s.c_str(), ViewResourceCache::getInstance().getRedrawCount(s), s2.c_str()); 
+		LOGD("defer: ResourceID: %s RedrawCount: %d %s", s.c_str(), redrawCount, s2.c_str()); 
 		
 	}
 //	ii++;

@@ -189,6 +189,13 @@ public class RenderNode {
 		nSetResourceID(name, mNativeRenderNode);
 	}
 
+	public int getRedrawCount() {
+		return nGetRedrawCount(mNativeRenderNode);
+	}
+	public int getDLCount() {
+		 return nGetDLCount(mNativeRenderNode);
+	}
+
 	public void updateResource() {
 		nUpdateResource(mNativeRenderNode);
 	}
@@ -840,8 +847,13 @@ public class RenderNode {
     ///////////////////////////////////////////////////////////////////////////
 
     private static native long nCreate(String name);
+	//ligengchao start
 	private static native void nSetResourceID(String name, long renderNode);//ligengchao
 	private static native void nUpdateResource(long renderNode);//ligengchao	
+	private static native int nGetRedrawCount(long renderNode);
+	private static native int nGetDLCount(long renderNode);
+	
+	//ligengchao end
     private static native void nDestroyRenderNode(long renderNode);
     private static native void nSetDisplayListData(long renderNode, long newData);
 

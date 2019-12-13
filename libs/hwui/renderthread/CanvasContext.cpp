@@ -221,7 +221,7 @@ void CanvasContext::draw() {
 
     Rect outBounds;
     status |= mCanvas->drawRenderNode(mRootRenderNode.get(), outBounds);
-
+	mRootRenderNode.get()->updateAllDLNumber();//ligengchao
     profiler().draw(mCanvas);
 
     mCanvas->finish();

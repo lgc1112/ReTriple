@@ -146,9 +146,19 @@ public:
 
 //ligengchao start
 
+
+	int getAllDLNumber(){
+		return allDLNumber;
+	}
+	int getRedrawCount(){
+		return redrawCount;
+	}
+
+	int updateAllDLNumber();
+	
 	const char* getResourceID() const {
-			return mResourceID.string();
-		}
+		return mResourceID.string();
+	}
 
 	void setResourceID(const char* name) {
 			if (name) {
@@ -156,6 +166,7 @@ public:
 			}
 		}
 	void updateResource()  {
+		redrawCount = 0;
 		//LOGD("updateResource: %s", name);
 		hasUpdate = true;
 		//updateResource = name;
@@ -319,7 +330,10 @@ private:
     // (specifically Layers) should be released.
     // This is *NOT* thread-safe, and should therefore only be tracking
     // mDisplayListData, not mStagingDisplayListData.
-    uint32_t mParentCount;
+    uint32_t mParentCount;	
+	int allDLNumber;
+	int ownDLNumber;
+	int redrawCount;
 }; // class RenderNode
 
 } /* namespace uirenderer */
