@@ -3555,6 +3555,7 @@ public class PhoneWindow extends Window implements MenuBuilder.Callback {
 			mDecor.mResourceID = mActivityName + "." + mDecor.getClass().getSimpleName() + "." + mDecor.hashCode(); 
 			mDecor.mResourceIDWithoutHashCode = mActivityName + "." + mDecor.getClass().getSimpleName();	
 			((View)mDecor).getRenderNode().setResourceID(mDecor.mResourceID); 
+			mDecor.openReuseResource = openReuseResource;
 			//ligengchao end 
             mDecor.setDescendantFocusability(ViewGroup.FOCUS_AFTER_DESCENDANTS);
             mDecor.setIsRootNamespace(true);

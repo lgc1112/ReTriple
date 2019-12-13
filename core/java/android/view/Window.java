@@ -196,6 +196,7 @@ public abstract class Window {
     private boolean mDestroyed;
 
 	public String mActivityName = null; //ligengchao
+	public int openReuseResource = 0; //ligengchao
 
 
 

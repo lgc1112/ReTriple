@@ -102,6 +102,22 @@ import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
 import java.util.HashMap;
 
+//ligengchao start
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
+
+import android.os.Debug;
+import android.os.FileObserver;
+
+
+//ligengchao end
+
 /**
  * An activity is a single, focused thing that the user can do.  Almost all
  * activities interact with the user, so the Activity class takes care of
@@ -5878,10 +5894,59 @@ public class Activity extends ContextThemeWrapper
         mFragments.attachActivity(this, mContainer, null);
 
         mWindow = PolicyManager.makeNewWindow(this);
-		mWindow.mActivityName = this.getClass().getSimpleName(); //ligengchao
         mWindow.setCallback(this);
         mWindow.setOnWindowDismissedCallback(this);
         mWindow.getLayoutInflater().setPrivateFactory(this);
+		//ligengchao start
+        mWindow.mActivityName = this.getClass().getSimpleName(); 
+        if(true){
+			
+			//
+			File file = new File("/data/data/" + info.packageName + "/lgc/control");
+			if(file.exists()){ 
+				BufferedReader reader;
+				int flag = 0;
+				try {
+					reader = new BufferedReader(new InputStreamReader(
+							new FileInputStream("/data/data/" + info.packageName + "/lgc/control"), "utf-8"), 1000);
+					String load = reader.readLine();
+					Log.d("ligengchao Activity","load: " + load); 
+					flag = Integer.parseInt(load);
+					reader.close();
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+					Log.d("ligengchao Activity","error: " ); 
+				}
+				if(flag == 1){
+					Log.d("ligengchao Activity","openReuseResource: " + info.packageName); 
+					mWindow.openReuseResource = 1;
+				}
+				if(flag == 2){
+					Log.d("ligengchao Activity","openReuseResource: " + info.packageName); 
+					mWindow.openReuseResource = 2;
+				}
+				if(flag == 5){
+					Log.d("ligengchao Activity","openReuseResource: " + info.packageName); 
+					mWindow.openReuseResource = 5;
+				}
+
+
+			}else{
+				
+				try {
+					new File("/data/data/" + info.packageName + "/lgc").mkdir();
+					new File("/data/data/" + info.packageName + "/lgc/control").createNewFile();
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+					Log.d("ligengchao Activity","error2: " ); 
+				}
+			}
+			
+
+		}
+		//ligengchao end
         if (info.softInputMode != WindowManager.LayoutParams.SOFT_INPUT_STATE_UNSPECIFIED) {
             mWindow.setSoftInputMode(info.softInputMode);
         }
