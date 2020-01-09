@@ -14037,8 +14037,8 @@ public class View implements Drawable.Callback, KeyEvent.Callback,
 		if(DLThreshold > 5)
 			DLThreshold = 0;
 		int PredictThreshold = predictTable[DLThreshold];
-		Log.d("ligengchao View"," updateDisplayListIfDirty: " + mResourceID + "  mRedrawCount：" + (mRedrawCount - 1) + "  mRedrawCountNatice:" 
-			+ mRedrawCountNatice + "  newDLCount:" + newDLCount + "  DLCount:" + DLCount + "  DLThreshold:" +  DLThreshold + "  PredictThreshold:" +  PredictThreshold );
+//		Log.d("ligengchao View"," updateDisplayListIfDirty: " + mResourceID + "  mRedrawCount：" + (mRedrawCount - 1) + "  mRedrawCountNatice:" 
+//			+ mRedrawCountNatice + "  newDLCount:" + newDLCount + "  DLCount:" + DLCount + "  DLThreshold:" +  DLThreshold + "  PredictThreshold:" +  PredictThreshold );
 		//ligengchao end
         if (!canHaveDisplayList()) {
             // can't populate RenderNode, don't try
@@ -14048,16 +14048,17 @@ public class View implements Drawable.Callback, KeyEvent.Callback,
         if ((mPrivateFlags & PFLAG_DRAWING_CACHE_VALID) == 0
                 || !renderNode.isValid()
                 || (mRecreateDisplayList)) {
+            
             // Don't need to recreate the display list, just need to tell our
             // children to restore/recreate theirs
             if (renderNode.isValid()
                     && !mRecreateDisplayList && needUpdateRenderNode) {//ligengchao add  && needUpdateRenderNode       
                 mPrivateFlags |= PFLAG_DRAWN | PFLAG_DRAWING_CACHE_VALID;
                 mPrivateFlags &= ~PFLAG_DIRTY_MASK;
+				Log.d("ligengchao View"," updateDisplayListIfDirty: " + mResourceID + " AveRedrawCount: " + renderNode.getAveRedrawCount() + " Dispatch"); //ligengchao
                 dispatchGetDisplayList();
 				mRenderNode.updateResource();//ligengchao
 				mRedrawCount = 0;//ligengchao
-				
 				//mResourceDrawingCache = null;//ligengchao
 				needUpdateRenderNode = true;//ligengchao
 				needDiscardBitmap = true;//ligengchao
@@ -14076,7 +14077,7 @@ public class View implements Drawable.Callback, KeyEvent.Callback,
 
             final HardwareCanvas canvas = renderNode.start(width, height);
             canvas.setHighContrastText(mAttachInfo.mHighContrastText);
-
+			Log.d("ligengchao View"," updateDisplayListIfDirty: " + mResourceID + " AveRedrawCount: " + renderNode.getAveRedrawCount() + " Dirty"); //ligengchao
             try {
                 final HardwareLayer layer = getHardwareLayer();
                 if (layer != null && layer.isValid()) {
@@ -14121,13 +14122,13 @@ public class View implements Drawable.Callback, KeyEvent.Callback,
             mPrivateFlags |= PFLAG_DRAWN | PFLAG_DRAWING_CACHE_VALID;
             mPrivateFlags &= ~PFLAG_DIRTY_MASK;
 			//ligengchao start
-
-			if(mRedrawCountNatice > PredictThreshold && PredictThreshold != -1  && openReuseResource != 0){
-				Log.d("ligengchao View"," useResourceCache: " + mResourceID); 
-				useResourceCache(); 
-				return;
-				
-			}
+			Log.d("ligengchao View"," NoDirty: " + mResourceID + " AveRedrawCount: " + renderNode.getAveRedrawCount() + " NoDirty"); //ligengchao
+//			if(mRedrawCountNatice > PredictThreshold && PredictThreshold != -1  && openReuseResource != 0){
+//				Log.d("ligengchao View"," useResourceCache: " + mResourceID);  
+//				useResourceCache(); 
+//				return;
+//				
+//			}
 			
 //			if(mRedrawCount > 10){
 //				int childViewNumber = 0;

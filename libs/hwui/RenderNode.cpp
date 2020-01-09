@@ -83,7 +83,7 @@ RenderNode::RenderNode()
         , mParentCount(0)
         , allDLNumber(0)//ligengchao
         , ownDLNumber(0)//ligengchao
-        , redrawCount(0){//ligengchao
+        , redrawCount(-1){//ligengchao
 }
 
 RenderNode::~RenderNode() {
@@ -206,12 +206,15 @@ int RenderNode::updateAllDLNumber(){
 
 //ligengchao end
 
+int RenderNode::getAveRedrawCount(){
+	return ViewResourceCache::getInstance().getAveRedrawCount(mResourceID.string());//aveRedrawCount = ViewResourceCache::getInstance().getAveRedrawCount(mResourceID.string());
+}
 
 void RenderNode::setStagingDisplayList(DisplayListData* data) {
 	//ligengchao start
 	std::string s = getResourceID();
 	hasUpdate = true;
-	redrawCount = 0;
+	//redrawCount = 0;
 	if(s.length() == 0){
 		s = getName();
 		//LOGD("update: ResourceID(Name): %s", s.c_str());
@@ -733,6 +736,12 @@ void RenderNode::defer(DeferStateStruct& deferStruct, const int level) {
 	}else{
 		if(hasUpdate){
 			hasUpdate = false;
+			if(redrawCount != -1){
+				LOGD("defer:updateRedrawCount  ResourceID: %s RedrawCount: %d", s.c_str(), redrawCount); 
+				ViewResourceCache::getInstance().updateRedrawCount(s, redrawCount);
+			}else{
+				LOGD("defer:updateRedrawCount-1  ResourceID: %s RedrawCount: %d", s.c_str(), redrawCount); 
+			}
 			redrawCount = 0;
 			//LOGD("update: hasUpdateResource: %s", s.c_str());
 			//ViewResourceCache::getInstance().generate(s); 
@@ -746,8 +755,9 @@ void RenderNode::defer(DeferStateStruct& deferStruct, const int level) {
 			redrawCount++;
 		}
 		//ViewResourceCache::getInstance().draw(s);
-		string s2 = printDisplayList(mDisplayListData);
-		LOGD("defer: ResourceID: %s RedrawCount: %d %s", s.c_str(), redrawCount, s2.c_str()); 
+		LOGD("defer: ResourceID: %s RedrawCount: %d", s.c_str(), redrawCount); 
+//		string s2 = printDisplayList(mDisplayListData);
+//		LOGD("defer: ResourceID: %s RedrawCount: %d %s", s.c_str(), redrawCount, s2.c_str()); 
 		
 	}
 //	ii++;

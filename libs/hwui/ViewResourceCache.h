@@ -24,6 +24,8 @@ public:
 //	void setResourceData(string id, ResourceData* data);
 	void generate(string id);
 	void draw(string id);
+	void updateRedrawCount(string id, int redrawCount);
+	int getAveRedrawCount(string id);  
 	int getRedrawCount(string id);  
 	string print(void);
 

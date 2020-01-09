@@ -154,6 +154,7 @@ public:
 		return redrawCount;
 	}
 
+	ANDROID_API int getAveRedrawCount();
 	int updateAllDLNumber();
 	
 	const char* getResourceID() const {
@@ -166,7 +167,7 @@ public:
 			}
 		}
 	void updateResource()  {
-		redrawCount = 0;
+		//redrawCount = 0;
 		//LOGD("updateResource: %s", name);
 		hasUpdate = true;
 		//updateResource = name;
@@ -334,6 +335,7 @@ private:
 	int allDLNumber;
 	int ownDLNumber;
 	int redrawCount;
+	int aveRedrawCount;
 }; // class RenderNode
 
 } /* namespace uirenderer */
