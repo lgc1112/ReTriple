@@ -185,6 +185,12 @@ string RenderNode::printDisplayList(DisplayListData* Data) {
 
 
 int RenderNode::updateAllDLNumber(){
+	if(mDisplayListData == NULL){
+		return -1;
+	}else if(mDisplayListData->isEmpty()){
+		return 0;
+	}
+
 	int childDLNumber = 0;
 	for(int i = 0; i < mDisplayListData->children().size(); i++){
 		DrawRenderNodeOp* childOp = mDisplayListData->children()[i];
@@ -737,10 +743,10 @@ void RenderNode::defer(DeferStateStruct& deferStruct, const int level) {
 		if(hasUpdate){
 			hasUpdate = false;
 			if(redrawCount != -1){
-				LOGD("defer:updateRedrawCount  ResourceID: %s RedrawCount: %d", s.c_str(), redrawCount); 
+				LOGD("defer:updateRedrawCount  ResourceID: %s RedrawCount: %d aveRedrawCount: %d", s.c_str(), redrawCount, getAveRedrawCount()); 
 				ViewResourceCache::getInstance().updateRedrawCount(s, redrawCount);
 			}else{
-				LOGD("defer:updateRedrawCount-1  ResourceID: %s RedrawCount: %d", s.c_str(), redrawCount); 
+				LOGD("defer:updateRedrawCount-1  ResourceID: %s RedrawCount: %d aveRedrawCount: %d", s.c_str(), redrawCount, getAveRedrawCount()); 
 			}
 			redrawCount = 0;
 			//LOGD("update: hasUpdateResource: %s", s.c_str());
@@ -755,7 +761,7 @@ void RenderNode::defer(DeferStateStruct& deferStruct, const int level) {
 			redrawCount++;
 		}
 		//ViewResourceCache::getInstance().draw(s);
-		LOGD("defer: ResourceID: %s RedrawCount: %d", s.c_str(), redrawCount); 
+		LOGD("defer: ResourceID: %s RedrawCount: %d aveRedrawCount: %d", s.c_str(), redrawCount, getAveRedrawCount()); 
 //		string s2 = printDisplayList(mDisplayListData);
 //		LOGD("defer: ResourceID: %s RedrawCount: %d %s", s.c_str(), redrawCount, s2.c_str()); 
 		

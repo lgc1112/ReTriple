@@ -3511,6 +3511,7 @@ public class View implements Drawable.Callback, KeyEvent.Callback,
 	private Thread mThread = null;
 	private boolean needUpdateRenderNode = true;
 	private boolean needDiscardBitmap = false;
+	private boolean isUsingBitmap = false;
 	//private boolean needEntryUseResource = false;
 	private Canvas mResourceCanvas;
 	public int openReuseResource = 0;
@@ -14021,12 +14022,12 @@ public class View implements Drawable.Callback, KeyEvent.Callback,
         return !(mAttachInfo == null || mAttachInfo.mHardwareRenderer == null);
     }
 
-	final int[] predictTable = {-1, 3, 3, 3, 5, 7};//ligengchao 
-	int DLCount = 0;//ligengchao 
+	//final int[] predictTable = {-1, 3, 3, 3, 5, 7};//ligengchao 
+	//int DLCount = 0;//ligengchao 
     private void updateDisplayListIfDirty() {
         final RenderNode renderNode = mRenderNode;
 		//ligengchao start
-		int newDLCount = renderNode.getDLCount();
+/*		int newDLCount = renderNode.getDLCount();
 		if(needUpdateRenderNode)
 			DLCount = newDLCount;
 		int mRedrawCountNatice = renderNode.getRedrawCount();
@@ -14036,7 +14037,7 @@ public class View implements Drawable.Callback, KeyEvent.Callback,
 		}
 		if(DLThreshold > 5)
 			DLThreshold = 0;
-		int PredictThreshold = predictTable[DLThreshold];
+		int PredictThreshold = predictTable[DLThreshold]; */
 //		Log.d("ligengchao View"," updateDisplayListIfDirty: " + mResourceID + "  mRedrawCount：" + (mRedrawCount - 1) + "  mRedrawCountNatice:" 
 //			+ mRedrawCountNatice + "  newDLCount:" + newDLCount + "  DLCount:" + DLCount + "  DLThreshold:" +  DLThreshold + "  PredictThreshold:" +  PredictThreshold );
 		//ligengchao end
@@ -14052,7 +14053,7 @@ public class View implements Drawable.Callback, KeyEvent.Callback,
             // Don't need to recreate the display list, just need to tell our
             // children to restore/recreate theirs
             if (renderNode.isValid()
-                    && !mRecreateDisplayList && needUpdateRenderNode) {//ligengchao add  && needUpdateRenderNode       
+                    && !mRecreateDisplayList && !isUsingBitmap && !(openReuseResource != 0 && renderNode.getAveRedrawCount() > 5)) {//ligengchao add   && !isUsingBitmap && !(openReuseResource != 0 && renderNode.getAveRedrawCount() > 5)       
                 mPrivateFlags |= PFLAG_DRAWN | PFLAG_DRAWING_CACHE_VALID;
                 mPrivateFlags &= ~PFLAG_DIRTY_MASK;
 				Log.d("ligengchao View"," updateDisplayListIfDirty: " + mResourceID + " AveRedrawCount: " + renderNode.getAveRedrawCount() + " Dispatch"); //ligengchao
@@ -14060,8 +14061,8 @@ public class View implements Drawable.Callback, KeyEvent.Callback,
 				mRenderNode.updateResource();//ligengchao
 				mRedrawCount = 0;//ligengchao
 				//mResourceDrawingCache = null;//ligengchao
-				needUpdateRenderNode = true;//ligengchao
-				needDiscardBitmap = true;//ligengchao
+				//needUpdateRenderNode = true;//ligengchao
+				//needDiscardBitmap = true;//ligengchao
 				//needEntryUseResource = false;//ligengchao
 				//Log.d("ligengchao View"," dispatchGetDisplayList: " + mResourceID);  //ligengchao
                 return; // no work needed
@@ -14077,7 +14078,7 @@ public class View implements Drawable.Callback, KeyEvent.Callback,
 
             final HardwareCanvas canvas = renderNode.start(width, height);
             canvas.setHighContrastText(mAttachInfo.mHighContrastText);
-			Log.d("ligengchao View"," updateDisplayListIfDirty: " + mResourceID + " AveRedrawCount: " + renderNode.getAveRedrawCount() + " Dirty"); //ligengchao
+			
             try {
                 final HardwareLayer layer = getHardwareLayer();
                 if (layer != null && layer.isValid()) {
@@ -14091,30 +14092,45 @@ public class View implements Drawable.Callback, KeyEvent.Callback,
                     }
 					viewType = 2;//ligengchao
                 } else {
-                    computeScroll();
-
-                    canvas.translate(-mScrollX, -mScrollY);
-                    mPrivateFlags |= PFLAG_DRAWN | PFLAG_DRAWING_CACHE_VALID;
-                    mPrivateFlags &= ~PFLAG_DIRTY_MASK;
-
-                    // Fast path for layouts with no backgrounds
-                    if ((mPrivateFlags & PFLAG_SKIP_DRAW) == PFLAG_SKIP_DRAW) {
-                        dispatchDraw(canvas);
-                        if (mOverlay != null && !mOverlay.isEmpty()) {
-                            mOverlay.getOverlayView().draw(canvas);
-                        }
-                    } else {
-                        draw(canvas);
-                    }
-                    drawAccessibilityFocus(canvas);
 					viewType = 3;//ligengchao
+					Log.d("ligengchao View"," updateDisplayListIfDirty: " + mResourceID + " AveRedrawCount: " + renderNode.getAveRedrawCount() + " Dirty"); //ligengchao
+					if(openReuseResource != 0 && renderNode.getAveRedrawCount() > 5){// 
+						computeScroll();						
+						canvas.translate(-mScrollX, -mScrollY);
+						mPrivateFlags |= PFLAG_DRAWN | PFLAG_DRAWING_CACHE_VALID;
+						mPrivateFlags &= ~PFLAG_DIRTY_MASK;
+						
+						isUsingBitmap = true;
+						Log.d("ligengchao View"," drawInBitmap: " + mResourceID+ " AveRedrawCount: " + renderNode.getAveRedrawCount() + " drawInBitmap"); //ligengchao
+						drawInBitmap(canvas);
+						
+						drawAccessibilityFocus(canvas);
+					}else{//ligengchao
+						isUsingBitmap = false;
+						computeScroll();						
+						canvas.translate(-mScrollX, -mScrollY);
+						mPrivateFlags |= PFLAG_DRAWN | PFLAG_DRAWING_CACHE_VALID;
+						mPrivateFlags &= ~PFLAG_DIRTY_MASK;
+
+						// Fast path for layouts with no backgrounds
+						if ((mPrivateFlags & PFLAG_SKIP_DRAW) == PFLAG_SKIP_DRAW) {
+							dispatchDraw(canvas);
+							if (mOverlay != null && !mOverlay.isEmpty()) {
+								mOverlay.getOverlayView().draw(canvas);
+							}
+						} else {
+							draw(canvas);
+						}
+						drawAccessibilityFocus(canvas);
+					}//ligengchao
+                    
                 }
             } finally {
                 renderNode.end(canvas);
 				mRedrawCount = 0;//ligengchao
 				//mResourceDrawingCache = null;//ligengchao
-				needUpdateRenderNode = true;//ligengchao
-				needDiscardBitmap = true;//ligengchao
+				//needUpdateRenderNode = true;//ligengchao
+				//needDiscardBitmap = true;//ligengchao
 				//needEntryUseResource = false;//ligengchao
                 setDisplayListProperties(renderNode);
             }
@@ -14122,7 +14138,10 @@ public class View implements Drawable.Callback, KeyEvent.Callback,
             mPrivateFlags |= PFLAG_DRAWN | PFLAG_DRAWING_CACHE_VALID;
             mPrivateFlags &= ~PFLAG_DIRTY_MASK;
 			//ligengchao start
-			Log.d("ligengchao View"," NoDirty: " + mResourceID + " AveRedrawCount: " + renderNode.getAveRedrawCount() + " NoDirty"); //ligengchao
+			if(viewType == 3)
+				Log.d("ligengchao View"," NoDirty: " + mResourceID + " AveRedrawCount: " + renderNode.getAveRedrawCount() + " NoDirty"); //ligengchao
+			else
+				Log.d("ligengchao View"," NoDirty: " + mResourceID + " AveRedrawCount: -10086" + " NoDirty"); //ligengchao
 //			if(mRedrawCountNatice > PredictThreshold && PredictThreshold != -1  && openReuseResource != 0){
 //				Log.d("ligengchao View"," useResourceCache: " + mResourceID);  
 //				useResourceCache(); 
@@ -14145,7 +14164,23 @@ public class View implements Drawable.Callback, KeyEvent.Callback,
 
 	
 //ligengchao start
-	
+	public void drawInBitmap(HardwareCanvas canvas) {
+		buildResourceDrawingCache();
+//		mDisplayResourceDrawingCache = mResourceDrawingCache;			
+//		mResourceDrawingCache = null;
+		try {
+			if (mResourceDrawingCache != null) {
+				//Log.d("ligengchao View"," drawBitmap: " + mResourceID); 
+				canvas.drawBitmap(mResourceDrawingCache, 0, 0, mLayerPaint);
+				
+			}
+				
+		}catch (Exception e) {
+			Log.d("ligengchao View"," drawInBitmap error: " + mResourceID); 
+		}finally {
+			
+		}
+	}
 	public void useResourceCache() {
 		if(viewType == 1)
 			return;

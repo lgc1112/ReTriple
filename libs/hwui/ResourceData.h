@@ -3,25 +3,30 @@
 #include <string>
 #include <stdio.h>
 using namespace std;
+#define NUM 12
 class ResourceData
 {
 public:
 	bool hasReGenerated ;
 	int reDrawCount;
-	int reDrawCounts[3];
+	int reDrawCounts[NUM];
 	int aveReDrawCount;
 	ResourceData(void){
-		reDrawCounts[0] = -1;
-		reDrawCounts[1] = -1;
-		reDrawCounts[2] = -1;
+		for(int i = 0; i < NUM; i++)
+			reDrawCounts[i] = -1;
 		aveReDrawCount = -1;
 	}
 	void updateReDrawCounts(int redrawC){
-		reDrawCounts[0] = reDrawCounts[1];
-		reDrawCounts[1] = reDrawCounts[2];
-		reDrawCounts[2] = redrawC;
+		int tmp = 0;
+		for(int i = 0; i <= NUM - 2; i++){
+			reDrawCounts[i] = reDrawCounts[i + 1];
+			tmp += reDrawCounts[i];
+			
+		}
+		reDrawCounts[NUM - 1] = redrawC;
+		tmp += reDrawCounts[NUM - 1];
 		if(reDrawCounts[0] != -1)
-			aveReDrawCount = (reDrawCounts[0] + reDrawCounts[1] + reDrawCounts[2]) / 3;
+			aveReDrawCount = tmp / NUM;
 	}
 	
 	string print(void) {

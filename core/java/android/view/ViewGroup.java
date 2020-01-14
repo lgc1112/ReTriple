@@ -3954,7 +3954,8 @@ public abstract class ViewGroup extends View implements ViewParent, ViewManager 
 			child.mResourceID = mResourceIDWithoutHashCode + "." + child.getClass().getSimpleName() + "." + child.hashCode(); 
 			child.mResourceIDWithoutHashCode = mResourceIDWithoutHashCode + "." + child.getClass().getSimpleName();
 			child.openReuseResource = openReuseResource;
-			child.mRenderNode.setResourceID(child.mResourceID);
+			//child.mRenderNode.setResourceID(child.mResourceID);
+			child.mRenderNode.setResourceID(child.mResourceIDWithoutHashCode);
 			if(child instanceof ViewGroup)
 				((ViewGroup)child).updateResourceID();
 
@@ -3997,7 +3998,8 @@ public abstract class ViewGroup extends View implements ViewParent, ViewManager 
 		child.openReuseResource = openReuseResource;
 		//Log.d("ligengchao ViewGroup"," addInArray: " + child.mResourceID); 
 
-		child.mRenderNode.setResourceID(child.mResourceID);
+		//child.mRenderNode.setResourceID(child.mResourceID);
+		child.mRenderNode.setResourceID(child.mResourceIDWithoutHashCode);
 		
 		if(child instanceof ViewGroup)
 			((ViewGroup)child).updateResourceID();
